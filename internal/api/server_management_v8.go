@@ -27,8 +27,13 @@ func (s *Server) registerManagementV8Routes() {
 		v8.Handle(method, "/config/*path", s.mgmt.ConfigV8)
 	}
 
+	v8.GET("/quota/history", s.mgmt.QuotaHistory)
+	v8.POST("/quota/history/collect", s.mgmt.CollectQuotaHistory)
+	v8.GET("/quota/providers", s.mgmt.GetQuotaProviders)
+	v8.POST("/quota/fetch", s.mgmt.RecordQuotaObservations(), s.mgmt.FetchCredentialQuota)
+
 	v8.GET("/server/latest-version", s.mgmt.GetLatestVersion)
-	v8.POST("/requests/api-call", s.mgmt.APICall)
+	v8.POST("/requests/api-call", s.mgmt.RecordQuotaObservations(), s.mgmt.APICall)
 	v8.POST("/routing/cooldown/reset", s.mgmt.ResetQuota)
 	v8.GET("/routing/model-definitions/:channel", s.mgmt.GetStaticModelDefinitions)
 

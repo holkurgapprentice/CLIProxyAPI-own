@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bytes"
 	"context"
 	"net/http"
 	"os"
@@ -336,5 +337,13 @@ func (s *Server) serveManagementControlPanel(c *gin.Context) {
 		}
 	}
 
-	c.File(filePath)
+	data, errRead := os.ReadFile(filePath)
+	if errRead != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	// Install the session bridge before the console bundle starts making requests.
+	bridge := []byte(`<script src="/quota-outlook/management.js"></script>`)
+	data = bytes.Replace(data, []byte("<head>"), append([]byte("<head>"), bridge...), 1)
+	c.Data(http.StatusOK, "text/html; charset=utf-8", data)
 }

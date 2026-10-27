@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Quota outlook</title><link rel="icon" href="data:,">
+<style>
+/* Console theme tokens. The management console overrides these at runtime so the outlook follows its theme. */
+:root{--bg-primary:#f0eee8;--bg-secondary:#faf9f5;--bg-tertiary:#e9e6df;--bg-hover:#e9e6df;--text-primary:#2d2a26;--text-secondary:#6d6760;--text-tertiary:#a29c95;--text-quaternary:#c0bab3;--border-color:#e3e1db;--border-primary:#d5d2cb;--border-hover:#cecac4;--primary-color:#8b8680;--error-color:#c65746;--bg-error-light:#c657461a;--warning-border:#c6574659;--success-badge-bg:#d1fae5;--success-badge-text:#065f46;--success-badge-border:#6ee7b7;--failure-badge-bg:#c6574624;--failure-badge-text:#8a3a30;--failure-badge-border:#c6574659;--count-badge-bg:#8b86802e;--floating-surface:#fffdf9;--floating-shadow:0 12px 26px #00000024;--ease-out-strong:cubic-bezier(.23,1,.32,1);--font:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen,Ubuntu,Cantarell,Fira Sans,Droid Sans,Helvetica Neue,sans-serif;--mono:ui-monospace,SF Mono,Cascadia Mono,JetBrains Mono,Fira Code,Menlo,Consolas,Liberation Mono,monospace;--accent:var(--text-secondary);color-scheme:light;background:var(--bg-secondary);color:var(--text-primary);font:14px/1.5 var(--font);-webkit-font-smoothing:antialiased}
+@media (prefers-color-scheme:dark){:root:not([data-theme]){--bg-primary:#1d1b18;--bg-secondary:#151412;--bg-tertiary:#262320;--bg-hover:#2e2a26;--text-primary:#f6f4f1;--text-secondary:#c9c3bb;--text-tertiary:#9c958d;--text-quaternary:#6f6962;--border-color:#3a3530;--border-primary:#4a453f;--border-hover:#5a544d;--bg-error-light:#c657462e;--warning-border:#c6574673;--success-badge-bg:#064e3b4d;--success-badge-text:#6ee7b7;--success-badge-border:#059669;--failure-badge-bg:#c657463d;--failure-badge-text:#f1b0a6;--failure-badge-border:#c6574680;--count-badge-bg:#8b868047;--floating-surface:#2a2723;--floating-shadow:0 14px 30px #0006;color-scheme:dark}}
+*{box-sizing:border-box}body{margin:0}main{max-width:1240px;margin:32px auto;padding:0 24px}
+button,input,select{font:inherit;color:inherit}
+.hidden{display:none!important}
+.muted{color:var(--text-tertiary)}
+/* Standalone page chrome. */
+.page-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:20px}.page-head a{color:var(--text-secondary);font-size:13px;text-decoration:none}.page-head a:hover{color:var(--text-primary)}
+h1{font-size:28px;font-weight:700;letter-spacing:-.02em;margin:6px 0 0}
+.btn{height:36px;padding:0 14px;border-radius:10px;border:1px solid var(--border-color);background:var(--bg-primary);color:var(--text-primary);font-size:13px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:border-color .2s var(--ease-out-strong),background-color .2s var(--ease-out-strong)}
+.btn:hover{border-color:var(--border-hover);background:var(--bg-hover)}.btn:disabled{opacity:.6;cursor:progress}
+.btn:focus-visible,.icon-btn:focus-visible,.tab:focus-visible,.link-btn:focus-visible,select:focus-visible,svg:focus-visible{outline:2px solid var(--primary-color);outline-offset:2px}
+#login{display:grid;gap:12px;max-width:520px;padding:20px;border:1px solid var(--border-color);border-radius:12px;background:var(--bg-primary)}#login label{display:grid;gap:6px;font-size:13px;color:var(--text-secondary)}
+#login input{height:40px;padding:0 12px;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-secondary)}#login small{color:var(--text-tertiary);font-size:12px}#login .btn{justify-self:start}
+/* Outlook panel. */
+.outlook{border-bottom:1px solid var(--border-color);padding-bottom:14px;animation:enter .5s var(--ease-out-strong) both}
+.summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0 4px}
+.headline{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 14px;min-width:0}
+.big{font-size:30px;font-weight:700;letter-spacing:-.02em;color:var(--accent);font-variant-numeric:tabular-nums;line-height:1.2;transition:color .3s var(--ease-out-strong)}
+.of{color:var(--text-tertiary);font-size:14px;margin-left:-8px}.pace{color:var(--text-secondary);font-size:13px}
+.alert{font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--failure-badge-bg);color:var(--failure-badge-text);border:1px solid var(--failure-badge-border)}
+.icon-btn{width:32px;height:32px;flex:none;border:0;border-radius:8px;background:transparent;color:var(--text-secondary);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:background-color .2s var(--ease-out-strong),color .2s var(--ease-out-strong)}
+.icon-btn:hover{background:var(--bg-tertiary);color:var(--text-primary)}.icon-btn svg{transition:transform .35s var(--ease-out-strong)}.icon-btn[aria-expanded=false] svg{transform:rotate(180deg)}
+.collapse{display:grid;grid-template-rows:1fr;transition:grid-template-rows .4s var(--ease-out-strong),opacity .3s var(--ease-out-strong)}.collapse>div{min-height:0;overflow:hidden}
+.collapse.closed{grid-template-rows:0fr;opacity:0}
+.tabs{position:relative;display:flex;gap:2px;border-bottom:1px solid var(--border-color);margin-top:8px}
+.tab{position:relative;border:0;background:transparent;color:var(--text-secondary);font-size:13px;padding:8px 2px 10px;margin-right:18px;cursor:pointer;transition:color .2s var(--ease-out-strong)}
+.tab:hover{color:var(--text-primary)}.tab[aria-selected=true]{color:var(--accent)}
+.indicator{position:absolute;bottom:-1px;left:0;height:2px;width:0;border-radius:2px;background:var(--accent);transition:transform .35s var(--ease-out-strong),width .35s var(--ease-out-strong),background-color .3s}
+.chart-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 0 4px;min-height:30px}
+.key{display:flex;align-items:center;gap:16px;font-size:12px;color:var(--text-secondary)}.key span{display:inline-flex;align-items:center;gap:7px}
+.swatch{width:7px;height:7px;border-radius:50%;background:var(--accent)}.dash{width:14px;border-top:2px dashed var(--accent)}.key .note{color:var(--text-tertiary)}
+.range{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-tertiary)}
+select{height:30px;padding:0 30px 0 10px;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-primary) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 4.5 3 3 3-3'/%3E%3C/svg%3E") no-repeat right 10px center;appearance:none;color:var(--text-primary);font-size:12px;font-weight:500;cursor:pointer;transition:border-color .2s var(--ease-out-strong)}
+select:hover{border-color:var(--border-hover)}select option{background:var(--bg-primary);color:var(--text-primary)}
+#plot{position:relative}#chart{display:block;width:100%;height:240px;overflow:visible;touch-action:pan-y}
+#chart .grid{stroke:var(--border-color);stroke-width:1}#chart .base{stroke:var(--border-primary)}
+#chart text{fill:var(--text-tertiary);font:11px var(--font);font-variant-numeric:tabular-nums}
+#chart .line{fill:none;stroke:var(--accent);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}#chart .projected{stroke-dasharray:5 5;opacity:.9}
+#chart .stop{stop-color:var(--accent)}#chart .now{stroke:var(--text-tertiary);stroke-dasharray:2 4}#chart .now-label{fill:var(--text-secondary)}
+#chart .cross{stroke:var(--text-tertiary);stroke-width:1;opacity:0;transition:opacity .15s}#chart .focus{fill:var(--accent);stroke:var(--bg-secondary);stroke-width:2;opacity:0;transition:opacity .15s}
+#chart.hovering .cross,#chart.hovering .focus{opacity:1}
+.tooltip{position:absolute;top:0;left:0;pointer-events:none;padding:7px 10px;border-radius:8px;background:var(--floating-surface);border:1px solid var(--border-color);box-shadow:var(--floating-shadow);font-size:12px;white-space:nowrap;opacity:0;transform:translate(-50%,calc(-100% - 6px)) scale(.97);transition:opacity .15s var(--ease-out-strong),transform .15s var(--ease-out-strong)}
+.tooltip.visible{opacity:1;transform:translate(-50%,calc(-100% - 12px))}.tooltip b{display:block;font-size:13px;font-variant-numeric:tabular-nums}.tooltip span{color:var(--text-tertiary)}
+.tooltip.below{transform:translate(-50%,6px) scale(.97)}.tooltip.below.visible{transform:translate(-50%,12px)}
+.tooltip ul{list-style:none;margin:6px 0 0;padding:6px 0 0;border-top:1px solid var(--border-color);display:grid;gap:3px}.tooltip li{display:flex;align-items:center;gap:6px}
+.tooltip li i{width:7px;height:7px;border-radius:50%;flex:none}.tooltip li span{color:var(--text-secondary);flex:1}.tooltip li em{font-style:normal;font-weight:600;font-variant-numeric:tabular-nums;margin-left:12px}
+.empty{position:absolute;inset:0 0 28px 44px;display:grid;place-items:center;color:var(--text-tertiary);font-size:13px;text-align:center;padding:0 16px}
+.chart-foot{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px 16px;font-size:12px;margin-top:4px}
+.chart-foot .lead{color:var(--text-primary);font-weight:500;margin-right:14px}.chart-foot .muted{color:var(--text-tertiary)}
+.link-btn{border:0;background:transparent;padding:4px 2px;color:var(--text-tertiary);font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;border-radius:6px}.link-btn:hover{color:var(--text-primary)}
+.link-btn svg{transition:transform .3s var(--ease-out-strong)}.link-btn[aria-expanded=true] svg{transform:rotate(90deg)}
+.fade{animation:fade .45s var(--ease-out-strong) both}
+.settings-inner{padding-top:14px;display:grid;gap:14px}
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;font-size:12px;color:var(--text-secondary)}.controls label{display:inline-flex;align-items:center;gap:8px}
+.controls input[type=checkbox]{accent-color:var(--accent);margin:0}.controls .btn{height:30px;font-size:12px;margin-left:auto}
+#status{font-size:12px;color:var(--text-tertiary);min-height:18px}
+.errors{white-space:pre-line;color:var(--error-color);background:var(--bg-error-light);border:1px solid var(--warning-border);border-radius:10px;padding:9px 12px;font-size:12.5px;line-height:1.5}.errors:empty{display:none}
+.table-wrap{overflow-x:auto;border:1px solid var(--border-color);border-radius:10px}
+table{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
+th{text-align:left;font-weight:500;color:var(--text-tertiary);background:var(--bg-tertiary);padding:8px 12px;white-space:nowrap}
+td{padding:9px 12px;border-top:1px solid var(--border-color);white-space:nowrap}td.num,th.num{text-align:right}
+tbody tr{transition:background-color .15s}tbody tr:hover{background:color-mix(in srgb,var(--bg-tertiary) 55%,transparent)}
+.who{display:flex;align-items:center;gap:8px}.who i{width:7px;height:7px;border-radius:50%;flex:none}.who small{color:var(--text-tertiary);font-size:11px;font-family:var(--mono)}
+td.num small{color:var(--text-tertiary);font-size:11px}
+.badge{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11.5px;font-weight:600;border:1px solid var(--border-color);background:var(--count-badge-bg);color:var(--text-secondary)}
+.badge.safe{background:var(--success-badge-bg);color:var(--success-badge-text);border-color:var(--success-badge-border)}.badge.risk{background:var(--failure-badge-bg);color:var(--failure-badge-text);border-color:var(--failure-badge-border)}
+.footnote{font-size:11.5px;line-height:1.6;color:var(--text-tertiary);margin:0}
+@keyframes enter{from{opacity:0;transform:translateY(6px)}}@keyframes fade{from{opacity:0}}
+.embedded body{overflow:hidden}.embedded main{max-width:none;margin:0;padding:0 2px}.embedded,.embedded body{background:transparent}
+@media(max-width:600px){main{padding:0 14px;margin:16px auto}.big{font-size:24px}.chart-head{flex-wrap:wrap}.controls .btn{margin-left:0}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style></head><body><main>
+<header class="page-head" id="pageHead"><div><a href="/management.html#/quota">← Quota management</a><h1>Quota outlook</h1></div><button id="logout" class="btn hidden">Disconnect</button></header>
+<form id="login"><label>Management key <input id="key" type="password" autocomplete="off" required placeholder="Kept in memory for this tab only"></label><button class="btn">Connect</button><small>The same key as the management console. Never saved in browser storage or quota history.</small></form>
+<section id="dashboard" class="outlook hidden" aria-label="Quota outlook">
+ <div class="summary">
+  <div class="headline" aria-live="polite"><span class="big" id="total">—</span><span class="of" id="capacity">Waiting for quota history</span><span class="pace" id="pace"></span><span class="alert hidden" id="risk"></span></div>
+  <button class="icon-btn" id="collapse" aria-expanded="true" aria-controls="body" title="Collapse"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 10 4-4 4 4"/></svg></button>
+ </div>
+ <div class="collapse" id="body"><div>
+  <div class="tabs" role="tablist" aria-label="Chart"><button class="tab" role="tab" id="remainingTab" aria-selected="true" aria-controls="plot">Remaining quota</button><button class="tab" role="tab" id="drainTab" aria-selected="false" aria-controls="plot" tabindex="-1">Drain rate</button><span class="indicator" id="indicator"></span></div>
+  <div class="chart-head">
+   <div class="key" id="legend"></div>
+   <label class="range" id="horizonRange">Range <select id="horizon"><option value="1">±1 day</option><option value="3">±3 days</option><option value="7" selected>±7 days</option><option value="14">±14 days</option></select></label>
+   <label class="range hidden" id="spanRange">Show <select id="span"><option value="6">Last 6 hours</option><option value="24" selected>Last 24 hours</option><option value="72">Last 3 days</option><option value="168">Last 7 days</option></select></label>
+  </div>
+  <div id="plot" role="tabpanel"><svg id="chart" tabindex="0" role="img" aria-label="Pooled quota chart"></svg><div class="tooltip" id="tooltip" aria-hidden="true"></div><div class="empty hidden" id="empty"></div></div>
+  <div class="chart-foot"><div id="foot"></div><button class="link-btn" id="settingsToggle" aria-expanded="false" aria-controls="settings"><svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" aria-hidden="true"><path d="M3 1.5 7 5 3 8.5z"/></svg>Forecast settings</button></div>
+  <div class="collapse closed" id="settings"><div><div class="settings-inner">
+   <div class="controls">
+    <label id="providerControl">Provider <select id="provider"><option value="all">All providers</option></select></label>
+    <label>Subscription <select id="account"><option value="all">All subscriptions</option></select></label>
+    <label>Limits <select id="limit"><option value="weekly" selected>Weekly limits</option><option value="short">5-hour windows</option></select></label>
+    <label>Pace averaged over <select id="lookback"><option value="24">Last 24 hours</option><option value="72">Last 3 days</option><option value="168" selected>Last 7 days</option></select></label>
+    <label><input type="checkbox" id="labels">Show account labels</label>
+    <button class="btn" id="refresh" type="button">Check quotas now</button>
+   </div>
+   <div id="status" role="status" aria-live="polite"></div>
+   <div class="errors" id="errors" role="alert"></div>
+   <div class="table-wrap"><table><thead><tr><th>Subscription</th><th class="num">Remaining</th><th class="num">Size</th><th class="num">Pace / day</th><th class="num">At reset</th><th>Resets</th><th>Status</th></tr></thead><tbody id="rows"></tbody></table></div>
+   <p class="footnote">The server checks every enabled subscription once an hour while it runs, and also records quota refreshes made in the console. History stays on this server for 14 days. Each limit is assumed full at the start of its reset cycle, and values between checks are interpolated. Totals add each selected limit's remaining percentage. The forecast continues each limit at its average daily pace (averaged over at least a full day, so a busy session is not projected around the clock) and refills it to 100% at its own reset. When a subscription runs out, its work moves to the provider's other subscriptions in proportion to their size. Size is measured from tokens the proxy routed per percent of quota used; until a subscription has used at least 5%, it is estimated from its plan (for example Max 20x = 20 × Pro, Codex Pro ≈ 6 × Plus). Use outside the proxy makes a subscription look smaller than it is.</p>
+  </div></div></div>
+ </div></div>
+</section>
+</main><script src="/quota-outlook/math.js"></script><script src="/quota-outlook/app.js"></script></body></html>

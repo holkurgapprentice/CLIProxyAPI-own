@@ -1,9 +1,10 @@
 # AGENTS.md
 
-Go 1.26+ proxy server providing OpenAI/Gemini/Claude/Codex compatible APIs with OAuth and round-robin load balancing.
+Go 1.26.10+ proxy server providing OpenAI/Gemini/Claude/Codex compatible APIs with OAuth and round-robin load balancing.
 
 ## Repository
-- GitHub: https://github.com/router-for-me/CLIProxyAPI
+- Fork: https://github.com/holkurgapprentice/CLIProxyAPI-own
+- Upstream: https://github.com/router-for-me/CLIProxyAPI
 
 ## Commands
 ```bash
@@ -61,3 +62,15 @@ go build -o test-output ./cmd/server && rm test-output # Verify compile (REQUIRE
 - Avoid wall-clock `time.Sleep` in TTL, expiration, ordering, or cache-eviction unit tests due to platform timer granularity (e.g. Windows default timer resolution of ~15.6ms) and CI jitter under load; prefer controllable clocks (`nowFunc` / mock clock), explicit timestamp manipulation, or deterministic synchronization primitives.
 - Note: if modifying features that involve CLIProxyAPIHome, check if corresponding updates are needed in the CLIProxyAPIHome repository.
 - Endpoints under the `/v0/management` base URL are deprecated and no longer maintained. For any feature changes, do not modify endpoints under `/v0/management` unless necessary to fix compilation errors.
+
+## Local fork policy
+
+- This is holkurgapprentice/CLIProxyAPI-own, a permanent personal fork. Never open upstream PRs. Bring upstream changes in only when requested and preserve fork behavior.
+- AGENTS.md is the only agent instruction file. Do not recreate CLAUDE.md or cloud.md. Treat references to iAgentsMD as this file.
+- Production is the directory set as CLIPROXY_PRODUCTION_PATH in the git-ignored .env.promotion (template: .env.promotion.example). "Promote to production" means run scripts/Promote-Production.ps1 to build and deploy this checkout there. Do not deploy merely because code changed.
+- Production already starts at Windows login. Preserve the existing startup setup. Stop processes by exact executable path, never by name alone.
+- Never copy source config, .env, auths, plugins, or downloaded management assets over production. Preserve all production setup. Back up and roll back the executable on failed startup.
+- Build with scripts/Build-Windows.ps1, which runs tests by default. Promotion builds and deploys without the full test suite by default; use -RunTests to include it. Never skip build, backup, health, or rollback checks. Use scripts/Promote-Production.ps1 -WhatIf for a non-mutating deployment preview.
+- Keep secrets, local config, quota history, binaries, logs, and backups out of Git. Stage explicit paths and inspect the staged diff before committing. Do not print production credentials.
+- The management UI is downloaded separately. Fork UI lives embedded under internal/quotaoutlook and mounts under the provider tabs in Observe → Quota Management (falling back to the end of the page), following the console session, active provider tab, and live theme tokens. Inject the integration when serving the console; never overwrite its downloaded file. New management APIs belong under /v8/management only.
+- README.md starts with a link to the original README, followed by brief plain-English fork differences. Update the list when adding fork behavior.

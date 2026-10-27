@@ -55,6 +55,9 @@ type Server struct {
 	handlers         *handlers.BaseAPIHandler
 	codexLiveHandler *codexlive.Handler
 
+	// quotaCollector stops the fork-owned hourly quota outlook collector.
+	quotaCollector quotaCollector
+
 	// cfg holds the current server configuration.
 	cfgMu sync.RWMutex
 	cfg   *config.Config
@@ -301,6 +304,7 @@ func (s *Server) Start() error {
 	if errListen != nil {
 		return fmt.Errorf("failed to start HTTP server: %v", errListen)
 	}
+	s.startQuotaCollector()
 
 	cfg := s.getConfig()
 	useTLS := cfg != nil && cfg.TLS.Enable
@@ -449,6 +453,7 @@ func (s *Server) Stop(ctx context.Context) error {
 	if s.codexLiveHandler != nil {
 		s.codexLiveHandler.Close()
 	}
+	s.quotaCollector.stop()
 	if errCloseServer != nil {
 		return fmt.Errorf("failed to shutdown HTTP server: %v", errCloseServer)
 	}

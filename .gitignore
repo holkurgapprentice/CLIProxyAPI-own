@@ -67,3 +67,19 @@ docker-compose.override.yml
 
 # Local LLM Wiki vault
 .llm-wiki
+
+/artifacts/
+/config*.yaml
+!/config.example.yaml
+.env.*
+!.env.example
+!.env.cluster.example
+!.env.promotion.example
+*.bak
+*.pem
+*.key
+/LOCAL-CREDENTIALS.txt
+/quota-history.json
+/quota-history.json.tmp
+
+/.playwright-mcp/
