@@ -393,3 +393,32 @@ func TestAuthClone_EmptyMapsIsolation(t *testing.T) {
 		t.Errorf("orig.ModelStates modified, len = %d", len(orig.ModelStates))
 	}
 }
+
+func TestAuth_KimiExpiryUsesStoredExpiredOverJWT(t *testing.T) {
+	now := time.Now().Truncate(time.Second)
+	stored := now.Add(-2 * time.Minute)
+	jwtExp := now.Add(58 * time.Minute)
+	auth := &Auth{
+		Provider: "kimi-ai",
+		Metadata: map[string]any{
+			"type":          "kimi-ai",
+			"access_token":  makeTestJWT(jwtExp.Unix()),
+			"refresh_token": "refresh",
+			"expired":       stored.UTC().Format(time.RFC3339),
+		},
+	}
+	if exp, ok := auth.ExpirationTime(); !ok || !exp.Equal(stored) {
+		t.Fatalf("ExpirationTime() = %v, %v; want stored expiry %v", exp, ok, stored)
+	}
+	if exp, ok := auth.AccessTokenExpirationTime(); !ok || !exp.Equal(stored) {
+		t.Fatalf("AccessTokenExpirationTime() = %v, %v; want stored expiry %v", exp, ok, stored)
+	}
+	if auth.HasValidAccessToken(now) {
+		t.Fatal("HasValidAccessToken() = true for a Kimi token past its stored expiry")
+	}
+
+	delete(auth.Metadata, "expired")
+	if exp, ok := auth.ExpirationTime(); !ok || exp.Unix() != jwtExp.Unix() {
+		t.Fatalf("ExpirationTime() without stored expiry = %v, %v; want JWT exp %v", exp, ok, jwtExp)
+	}
+}

@@ -908,7 +908,7 @@ func (a *Auth) OuterExpirationTime() (time.Time, bool) {
 	if tokenStr != "" && a.RejectedAccessToken != "" && a.RejectedAccessToken == tokenStr {
 		return time.Unix(0, 0), true
 	}
-	if tokenStr != "" {
+	if tokenStr != "" && trustsJWTExpiry(a) {
 		if jwtExp, ok := parseJWTExp(tokenStr); ok {
 			return jwtExp, true
 		}
@@ -917,6 +917,18 @@ func (a *Auth) OuterExpirationTime() (time.Time, bool) {
 		return ts, true
 	}
 	return time.Time{}, false
+}
+
+// trustsJWTExpiry reports whether a JWT exp claim reflects when upstream rejects the token.
+// Kimi access tokens carry exp an hour past their real 15-minute lifetime, so their
+// expiry comes from expires_in, which login and refresh store as "expired".
+func trustsJWTExpiry(a *Auth) bool {
+	switch strings.ToLower(strings.TrimSpace(a.Provider)) {
+	case "kimi", "kimi-ai", "kimi.ai", "kimi.com":
+		_, ok := expirationFromMap(a.Metadata)
+		return !ok
+	}
+	return true
 }
 
 // ExpirationTime attempts to extract the active credential expiration timestamp from metadata.
@@ -1160,7 +1172,7 @@ func CodexSIWCNeedsRefresh(a *Auth, now time.Time) (dueAt time.Time, hasRefresh 
 }
 
 // AccessTokenExpirationTime returns the expiration time of the specific access_token.
-// If the access_token is a JWT, its exp claim takes strict precedence.
+// If the access_token is a JWT, its exp claim takes strict precedence unless the provider misreports it.
 func (a *Auth) AccessTokenExpirationTime() (time.Time, bool) {
 	if a == nil {
 		return time.Time{}, false
@@ -1171,6 +1183,9 @@ func (a *Auth) AccessTokenExpirationTime() (time.Time, bool) {
 	}
 	if (a.RejectedAccessToken != "" && a.RejectedAccessToken == tokenStr) || (IsCodexUseSIWC(a) && a.isSIWCAccessTokenRejected(tokenStr)) {
 		return time.Unix(0, 0), true
+	}
+	if !trustsJWTExpiry(a) {
+		return a.ExpirationTime()
 	}
 	if jwtExp, ok := parseJWTExp(tokenStr); ok {
 		return jwtExp, true

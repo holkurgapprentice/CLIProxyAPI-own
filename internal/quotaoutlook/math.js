@@ -130,6 +130,16 @@ function accountShort(s) {
  if(s.provider==='codex')return s.limit.startsWith('rate_limit/');
  return true;
 }
+// Account-wide monthly limit, counted in place of a weekly one when a subscription has none (e.g. Kimi).
+function accountMonthly(s) {
+ if(!(s.windowHours>=600&&s.windowHours<=800))return false;
+ return s.provider!=='claude'&&s.provider!=='codex';
+}
+// Each subscription's long limit: its weekly limits, or its monthly limit when it reports no weekly one.
+function accountLong(samples) {
+ const weekly=new Set(samples.filter(accountWeekly).map(s=>s.account));
+ return samples.filter(s=>accountWeekly(s)||(accountMonthly(s)&&!weekly.has(s.account)));
+}
 // Value of a piecewise-linear series at t. side<0 takes the value before a jump at t.
 function valueAt(points,t,side=1) {
  if(!points.length)return 0;
@@ -189,6 +199,6 @@ function drain(seriesList,start,end,step,window=HOUR) {
  }
 }
 
-const api={key,timeline,outlook,forecast,capacity,sizes,poolForecast,accountWeekly,accountShort,valueAt,sumForecast,sumHistory,drain};
+const api={key,timeline,outlook,forecast,capacity,sizes,poolForecast,accountWeekly,accountShort,accountMonthly,accountLong,valueAt,sumForecast,sumHistory,drain};
 if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.QuotaMath=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

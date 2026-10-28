@@ -54,13 +54,14 @@ async function refresh(collect){
  finally{busy=false;$('refresh').disabled=false;}
 }
 function groups(){
- const result=new Map();
+ const result=new Map(),short=$('limit').value==='short';
+ // One kind of limit at a time; mixing windows would make totals and shared work meaningless.
+ const long=short?null:new Set(Q.accountLong(history));
  for(const s of history){
   if(!accounts.some(a=>a.auth_index===s.account))continue;
   if(provider()!=='all'&&s.provider!==provider())continue;
   if($('account').value!=='all'&&s.account!==$('account').value)continue;
-  // One kind of limit at a time; mixing windows would make totals and shared work meaningless.
-  if(!($('limit').value==='short'?Q.accountShort(s):Q.accountWeekly(s)))continue;
+  if(short?!Q.accountShort(s):!long.has(s))continue;
   const id=Q.key(s);if(!result.has(id))result.set(id,[]);result.get(id).push(s);
  }
  return [...result.values()];

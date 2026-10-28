@@ -123,3 +123,10 @@ test('account 5-hour window excludes weekly and model-specific limits',()=>{
  assert.ok(Q.accountShort(limit('claude','five_hour',5)));
  assert.ok(!Q.accountShort(limit('claude','seven_day',168)));
 });
+test('monthly limits count only for subscriptions without a weekly one',()=>{
+ const limit=(account,provider,name,windowHours)=>({account,provider,limit:name,windowHours});
+ const kimi=[limit('k','kimi','limit/5h',5),limit('k','kimi','monthly',720)];
+ const both=[limit('m','kimi','weekly',168),limit('m','kimi','monthly',720)];
+ const claude=[limit('c','claude','seven_day',168),limit('c','claude','five_hour',5)];
+ assert.deepEqual(Q.accountLong([...kimi,...both,...claude]).map(s=>s.account+' '+s.limit),['k monthly','m weekly','c seven_day']);
+});

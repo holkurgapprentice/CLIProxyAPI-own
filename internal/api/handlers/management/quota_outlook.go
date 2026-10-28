@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/router-for-me/CLIProxyAPI/v8/internal/auth/kimi"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/quotaoutlook"
 	coreauth "github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/auth"
 	log "github.com/sirupsen/logrus"
@@ -21,6 +22,7 @@ const (
 	claudeUsageURL   = "https://api.anthropic.com/api/oauth/usage"
 	claudeProfileURL = "https://api.anthropic.com/api/oauth/profile"
 	codexUsageURL    = "https://chatgpt.com/backend-api/wham/usage"
+	kimiUsagePath    = "/v1/usages"
 	// quotaCollectDelay lets credentials load before the first scheduled check.
 	quotaCollectDelay = time.Minute
 	maxRecordedBody   = 4 << 20
@@ -116,26 +118,36 @@ func (h *Handler) CollectQuota(ctx context.Context) (int, []string) {
 
 // fetchQuotaSamples reuses the management handlers so token refresh and proxy selection stay identical.
 func (h *Handler) fetchQuotaSamples(ctx context.Context, auth *coreauth.Auth) ([]quotaoutlook.Sample, bool) {
-	provider := strings.TrimSpace(auth.Provider)
-	if provider == "claude" || provider == "codex" {
+	provider := quotaProvider(auth)
+	if provider == "claude" || provider == "codex" || provider == "kimi" {
 		// API key credentials have no subscription quota endpoint.
 		if auth.Attributes != nil && strings.TrimSpace(auth.Attributes["api_key"]) != "" {
 			return nil, false
 		}
 		request := apiCallRequest{AuthIndexSnake: &auth.Index, Method: http.MethodGet, URL: claudeUsageURL,
 			Header: map[string]string{"Authorization": "Bearer $TOKEN$", "Content-Type": "application/json", "anthropic-beta": "oauth-2025-04-20"}}
-		if provider == "codex" {
+		switch provider {
+		case "codex":
 			request.URL = codexUsageURL
 			request.Header = map[string]string{"Authorization": "Bearer $TOKEN$", "Content-Type": "application/json"}
 			if account, ok := extractCodexIDTokenClaims(auth)["chatgpt_account_id"].(string); ok {
 				request.Header["Chatgpt-Account-Id"] = account
 			}
+		case "kimi":
+			// Same endpoint the console uses: the account's own domain, not a custom base URL.
+			request.URL = kimi.KimiAPIBaseURL + kimiUsagePath
+			if kimi.IsKimiAIAuth(auth) {
+				request.URL = kimi.KimiAIAPIBaseURL + kimiUsagePath
+			}
+			request.Header = map[string]string{"Authorization": "Bearer $TOKEN$"}
 		}
 		status, body := invokeManagement(ctx, h.APICall, request)
 		if status != http.StatusOK {
 			return nil, true
 		}
-		h.rememberQuotaPlan(ctx, auth, request.Header)
+		if provider != "kimi" {
+			h.rememberQuotaPlan(ctx, auth, request.Header)
+		}
 		return apiCallQuotaSamples(auth, body), true
 	}
 	status, body := invokeManagement(ctx, h.FetchCredentialQuota, map[string]string{"auth_index": auth.Index})
@@ -173,7 +185,16 @@ func apiCallQuotaSamples(auth *coreauth.Auth, body []byte) []quotaoutlook.Sample
 	if errJSON := json.Unmarshal(body, &response); errJSON != nil || response.StatusCode != http.StatusOK {
 		return nil
 	}
-	return quotaoutlook.Normalize(auth.Index, auth.Provider, []byte(response.Body), time.Now())
+	return quotaoutlook.Normalize(auth.Index, quotaProvider(auth), []byte(response.Body), time.Now())
+}
+
+// quotaProvider names the console provider tab a credential belongs to; Kimi.ai and Kimi share one.
+func quotaProvider(auth *coreauth.Auth) string {
+	provider := strings.TrimSpace(auth.Provider)
+	if provider == "kimi-ai" {
+		return "kimi"
+	}
+	return provider
 }
 
 func invokeManagement(ctx context.Context, handler gin.HandlerFunc, payload any) (int, []byte) {
@@ -268,15 +289,15 @@ func (h *Handler) recordQuotaResponse(apiCall bool, requestBody, responseBody []
 			}
 			return
 		}
-		if quotaUsageProvider(request.URL) != auth.Provider {
+		if quotaUsageProvider(request.URL) != quotaProvider(auth) {
 			return
 		}
 		if auth.Provider == "codex" {
 			h.rememberQuotaPlan(context.Background(), auth, nil)
 		}
 		samples = apiCallQuotaSamples(auth, responseBody)
-	} else if auth.Provider != "claude" && auth.Provider != "codex" {
-		samples = quotaoutlook.Normalize(auth.Index, auth.Provider, responseBody, time.Now())
+	} else if provider := quotaProvider(auth); provider != "claude" && provider != "codex" && provider != "kimi" {
+		samples = quotaoutlook.Normalize(auth.Index, provider, responseBody, time.Now())
 	}
 	if len(samples) == 0 {
 		return
@@ -303,6 +324,8 @@ func quotaUsageProvider(raw string) string {
 		return "claude"
 	case host == "chatgpt.com" && path == "/backend-api/wham/usage":
 		return "codex"
+	case (host == "api.kimi.com" || host == "api.kimi.ai") && path == "/coding"+kimiUsagePath:
+		return "kimi"
 	}
 	return ""
 }

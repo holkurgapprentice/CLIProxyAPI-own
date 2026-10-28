@@ -82,3 +82,19 @@ func TestCollectQuotaSkipsUnsupportedCredentials(t *testing.T) {
 		t.Fatalf("collected=%d failed=%v", collected, failed)
 	}
 }
+
+func TestQuotaUsageProviderRecognizesKimiDomains(t *testing.T) {
+	for raw, want := range map[string]string{
+		"https://api.kimi.com/coding/v1/usages":      "kimi",
+		"https://api.kimi.ai/coding/v1/usages/":      "kimi",
+		"https://api.kimi.com/coding/v1/models":      "",
+		"https://chatgpt.com/backend-api/wham/usage": "codex",
+	} {
+		if got := quotaUsageProvider(raw); got != want {
+			t.Errorf("quotaUsageProvider(%q) = %q, want %q", raw, got, want)
+		}
+	}
+	if got := quotaProvider(&coreauth.Auth{Provider: "kimi-ai"}); got != "kimi" {
+		t.Fatalf("kimi-ai provider = %q", got)
+	}
+}

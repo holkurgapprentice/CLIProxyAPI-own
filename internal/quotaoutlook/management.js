@@ -3,6 +3,7 @@
   'use strict';
   let authorization = '', frame = null, section = null, routeSince = 0, lastState = '', scheduled = false, retry = 0;
   let notes = new Map(), notesWanted = true, notesLoading = false;
+  let fileIndex = new Map(), months = new Map(), monthsAt = 0, monthsLoading = false;
   // Console theme tokens mirrored into the outlook so it matches every console theme.
   const TOKENS = ['--bg-primary', '--bg-secondary', '--bg-tertiary', '--bg-hover', '--text-primary', '--text-secondary',
     '--text-tertiary', '--text-quaternary', '--border-color', '--border-primary', '--border-hover', '--primary-color',
@@ -48,7 +49,9 @@
     style.textContent = '.qo-split>[class*="QuotaTimeline-module__windowLabel"]{display:none}' +
       '.qo-used,.qo-left{position:relative;font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis}' +
       '.qo-used{font-weight:600}.qo-left{margin-left:auto;padding-left:8px}' +
-      '.qo-named>[class*="QuotaCard-module__fileName"]:not(.qo-note),.qo-named>[class*="QuotaTimeline-module__laneName"]:not(.qo-note){display:none}';
+      '.qo-named>[class*="QuotaCard-module__fileName"]:not(.qo-note),.qo-named>[class*="QuotaTimeline-module__laneName"]:not(.qo-note){display:none}' +
+      '.qo-month>[class*="QuotaTimeline-module__window___"]:not(.qo-bar),.qo-month>[class*="QuotaTimeline-module__laneIdle"],' +
+      '.qo-month-top>[class*="QuotaTimeline-module__lanePeriod"]:not(.qo-period){display:none}';
     document.head.append(style);
   }
   // Credential notes from the auth file editor, keyed by file name.
@@ -61,10 +64,152 @@
       .then(data => {
         if (!Array.isArray(data?.files)) return;
         notes = new Map(data.files.filter(file => typeof file.note === 'string' && file.note.trim()).map(file => [file.name, file.note.trim()]));
+        fileIndex = new Map(data.files.map(file => [file.name, file.auth_index]));
         scheduleSync();
       })
       .catch(() => { /* Keep file names when notes cannot be loaded. */ })
       .finally(() => { notesLoading = false; });
+  }
+  // Latest monthly limit of each subscription that reports no weekly one (Kimi), from quota history.
+  function loadMonths() {
+    if (monthsLoading || !authorization || Date.now() - monthsAt < 120000) return;
+    monthsLoading = true;
+    monthsAt = Date.now();
+    originalFetch('/v8/management/quota/history', {headers: {Authorization: authorization}, cache: 'no-store'})
+      .then(response => response.ok ? response.json() : null)
+      .then(data => {
+        if (!Array.isArray(data?.samples)) return;
+        const latest = new Map(), next = new Map();
+        for (const sample of data.samples) {
+          const at = Date.parse(sample.at), last = latest.get(sample.account);
+          if (!last || at > last.at) latest.set(sample.account, {at, batch: [sample]});
+          else if (at === last.at) last.batch.push(sample);
+        }
+        for (const [account, {batch}] of latest) {
+          const month = batch.find(s => s.windowHours >= 600 && s.windowHours <= 800 && Date.parse(s.reset));
+          if (!month || batch.some(s => s.windowHours >= 144 && s.windowHours <= 192)) continue;
+          next.set(account, {reset: Date.parse(month.reset), remaining: Math.round(month.remaining)});
+        }
+        months = next;
+        scheduleSync();
+      })
+      .catch(() => { monthsAt = 0; })
+      .finally(() => { monthsLoading = false; });
+  }
+  // Hashed console class names, read from the console's inline styles.
+  const classes = {};
+  function moduleClass(name) {
+    if (!classes[name]) {
+      const pattern = new RegExp('QuotaTimeline-module__' + name + '___[\\w-]+');
+      for (const style of document.querySelectorAll('style')) {
+        const match = pattern.exec(style.textContent);
+        if (match) { classes[name] = match[0]; break; }
+      }
+    }
+    return classes[name] || '';
+  }
+  const pad = n => String(n).padStart(2, '0');
+  const stamp = ms => { const d = new Date(ms); return pad(d.getMonth() + 1) + '/' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+  const laneFile = lane => { const name = lane.querySelector('[class*="QuotaTimeline-module__laneName"]:not(.qo-note)'); return name?.getAttribute('title') || name?.textContent || ''; };
+  // The weekly view only draws windows up to two weeks long, so a subscription whose long limit is
+  // monthly shows its 5-hour window there. Draw its monthly windows instead, styled like the console's.
+  function monthLanes() {
+    const weekly = document.querySelector('[class*="QuotaTimeline-module__modes"] button')?.getAttribute('aria-pressed') === 'true';
+    const first = /^(\d\d)\/(\d\d)$/.exec(document.querySelector('[class*="QuotaTimeline-module__axisDate"]')?.textContent.trim() || '');
+    let start = NaN;
+    if (weekly && first) {
+      // The axis shows no year; take the one nearest today.
+      const now = Date.now();
+      start = [-1, 0, 1].map(k => new Date(new Date().getFullYear() + k, first[1] - 1, first[2]).getTime())
+        .reduce((best, at) => Math.abs(at - now) < Math.abs(best - now) ? at : best);
+    }
+    const end = new Date(start);
+    end.setDate(end.getDate() + 14);
+    for (const lane of document.querySelectorAll('[class*="QuotaTimeline-module__lane___"]')) {
+      const track = lane.querySelector('[class*="QuotaTimeline-module__track___"]');
+      const top = lane.querySelector('[class*="QuotaTimeline-module__laneTop"]');
+      const month = Number.isFinite(start) ? months.get(fileIndex.get(laneFile(lane))) : null;
+      if (!track || !top) continue;
+      if (month) {
+        drawMonths(lane, track, top, month, start, end.getTime());
+        continue;
+      }
+      track.classList.remove('qo-month');
+      top.classList.remove('qo-month-top');
+      for (const node of lane.querySelectorAll('.qo-bar,.qo-period')) node.remove();
+      track.qoMonths = '';
+    }
+  }
+  function drawMonths(lane, track, top, month, start, end) {
+    const now = Date.now(), percent = ms => (ms - start) / (end - start) * 100;
+    const shift = (ms, n) => { const d = new Date(ms); d.setUTCMonth(d.getUTCMonth() + n); return d.getTime(); };
+    const bars = [];
+    let n = 0;
+    while (shift(month.reset, n - 1) > start && n > -24) n--;
+    for (; shift(month.reset, n - 1) < end && n < 24; n++) {
+      const from = shift(month.reset, n - 1), to = shift(month.reset, n);
+      const left = Math.max(0, percent(from)), right = Math.min(100, percent(to));
+      if (right <= left) continue;
+      const state = to <= now ? 'Past' : from <= now ? 'Live' : 'Next';
+      // Usage belongs to the reported month only, as in the console's own bars.
+      bars.push({from, to, left, width: right - left, state, remaining: state === 'Live' && n === 0 ? month.remaining : null});
+    }
+    if (!track.classList.contains('qo-month')) track.classList.add('qo-month');
+    if (!top.classList.contains('qo-month-top')) top.classList.add('qo-month-top');
+    if (!top.querySelector(':scope>.qo-period')) {
+      const period = document.createElement('span');
+      period.className = moduleClass('lanePeriod') + ' qo-period';
+      period.textContent = '1mo';
+      top.append(period);
+    }
+    // Rebuild only when the bars change, so the observer settles.
+    const signature = JSON.stringify(bars);
+    if (track.qoMonths === signature) return;
+    track.qoMonths = signature;
+    for (const node of track.querySelectorAll(':scope>.qo-bar')) node.remove();
+    for (const bar of bars) {
+      const node = document.createElement('div');
+      node.className = moduleClass('window') + ' ' + moduleClass('window' + bar.state) + ' qo-bar';
+      node.style.left = bar.left + '%';
+      node.style.width = bar.width + '%';
+      node.title = laneFile(lane) + '\n' + stamp(bar.from) + ' → ' + stamp(bar.to) + (bar.remaining !== null ? '\n' + bar.remaining + '% remaining' : '');
+      if (bar.remaining !== null) {
+        const fill = document.createElement('span');
+        fill.className = moduleClass('windowFill');
+        fill.style.width = (100 - bar.remaining) + '%';
+        node.append(fill);
+      }
+      if (bar.width > 9) {
+        const label = document.createElement('span');
+        label.className = moduleClass('windowLabel');
+        label.textContent = (bar.remaining !== null ? bar.remaining + '% · ' : '') + stamp(bar.to);
+        node.append(label);
+      }
+      track.append(node);
+    }
+  }
+  // Kimi rows carry only a translation key, so their lane chips have no name; reuse the card's row names.
+  function nameLimits() {
+    const cards = new Map();
+    for (const name of document.querySelectorAll('[class*="QuotaCard-module__fileName"]:not(.qo-note)')) {
+      cards.set(name.getAttribute('title') || name.textContent, name.closest('[class*="QuotaCard-module__card___"]'));
+    }
+    for (const lane of document.querySelectorAll('[class*="QuotaTimeline-module__lane___"]')) {
+      const chips = [...lane.querySelectorAll('[class*="QuotaTimeline-module__laneLimit___"]')];
+      const rows = [...(cards.get(laneFile(lane))?.querySelectorAll('[class*="QuotaBody-module__quotaModel"]') || [])];
+      chips.forEach((chip, index) => {
+        let label = chip.querySelector(':scope>.qo-limit');
+        const own = [...chip.childNodes].filter(node => node.nodeType === Node.TEXT_NODE).map(node => node.textContent).join('').trim();
+        const text = !own && rows.length === chips.length ? rows[index].textContent.trim() : '';
+        if (!text) { label?.remove(); return; }
+        if (!label) {
+          label = document.createElement('span');
+          label.className = 'qo-limit';
+          chip.prepend(label);
+        }
+        if (label.textContent !== text + ' ') label.textContent = text + ' ';
+      });
+    }
   }
   // Quota cards and quota window lanes show the credential note instead of the file name;
   // hovering still shows the file name.
@@ -139,7 +284,10 @@
       if (!isQuota()) return;
       addStyle();
       loadNotes();
+      loadMonths();
       nameCards();
+      monthLanes();
+      nameLimits();
       splitWindows();
     }, 50);
   };
@@ -151,6 +299,7 @@
       if (typeof value === 'string' && /^Bearer\s+\S+/i.test(value) && authorization !== value) {
         authorization = value;
         notesWanted = true;
+        monthsAt = 0;
         scheduleSync();
       }
     } catch { /* Ignore non-URL requests. */ }
@@ -195,6 +344,7 @@
     }
     // Notes may have been edited on the auth files page since the last visit.
     notesWanted = true;
+    monthsAt = 0;
     section = document.createElement('section');
     section.id = 'quota-outlook-section';
     section.setAttribute('aria-label', 'Quota outlook');

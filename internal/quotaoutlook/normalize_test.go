@@ -47,3 +47,23 @@ func TestNormalizePluginQuotaGroups(t *testing.T) {
 		t.Fatal("invalid JSON must produce no samples")
 	}
 }
+
+func TestNormalizeKimiWindowsAndMonthlyRatio(t *testing.T) {
+	now := time.Date(2026, 10, 27, 12, 0, 0, 0, time.UTC)
+	body := `{"limits":[{"window":{"duration":300,"timeUnit":"TIME_UNIT_MINUTE"},"detail":{"limit":"100","remaining":"75","resetTime":"2026-10-27T13:33:00.123456789123Z"}}],
+		"usages":{"limit_month_total":{"used_ratio":0.25,"reset_time":"2026-11-28T00:00:00Z"}}}`
+	samples := Normalize("k", "kimi", []byte(body), now)
+	if len(samples) != 2 {
+		t.Fatalf("got %d samples: %+v", len(samples), samples)
+	}
+	if samples[0].Limit != "limit/5h" || samples[0].Remaining != 75 || samples[0].WindowHours != 5 || samples[0].Reset.Hour() != 13 {
+		t.Fatalf("unexpected window sample: %+v", samples[0])
+	}
+	if samples[1].Limit != "monthly" || samples[1].Remaining != 75 || samples[1].WindowHours != 720 || samples[1].Reset.Day() != 28 {
+		t.Fatalf("unexpected monthly sample: %+v", samples[1])
+	}
+	weekly := Normalize("k", "kimi", []byte(`{"usage":{"limit":200,"used":50,"reset_in":3600}}`), now)
+	if len(weekly) != 1 || weekly[0].Limit != "weekly" || weekly[0].Remaining != 75 || weekly[0].WindowHours != 168 || !weekly[0].Reset.Equal(now.Add(time.Hour)) {
+		t.Fatalf("unexpected weekly sample: %+v", weekly)
+	}
+}
