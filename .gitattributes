@@ -1,0 +1,2 @@
+# This fixture preserves raw JSON whitespace in byte-for-byte golden comparisons.
+internal/translator/claude/openai/responses/testdata/tool_search_disabled/cases.json text eol=lf
