@@ -15,11 +15,14 @@
   function sendSession(force=false) {
     if(!frame?.contentWindow) return;
     const vars={}, style=getComputedStyle(document.documentElement);
-    for(const name of ['--bg-primary','--bg-secondary','--bg-tertiary','--text-primary','--text-secondary','--border-color','--primary-color']) {
+    for(const name of ['--bg-primary','--bg-secondary','--bg-tertiary','--bg-hover','--text-primary','--text-secondary','--text-tertiary',
+      '--text-quaternary','--border-color','--border-primary','--border-hover','--primary-color','--danger-color','--bg-error-light',
+      '--warning-border','--success-badge-bg','--success-badge-text','--success-badge-border','--failure-badge-bg','--failure-badge-text',
+      '--failure-badge-border','--floating-surface','--floating-shadow','--viz-success','--viz-failure','--ease-out-strong']) {
       const value=style.getPropertyValue(name).trim();
       if(value) vars[name]=value;
     }
-    vars['--console-font']=getComputedStyle(document.body).fontFamily;
+    vars['--font']=getComputedStyle(document.body).fontFamily;
     const session={type:'usage-insights-session',authorization,vars,theme:document.documentElement.getAttribute('data-theme')==='dark'?'dark':'light'};
     const serialized=JSON.stringify(session);
     if(!force && serialized===lastSession) return;

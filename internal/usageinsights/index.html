@@ -1,17 +1,118 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Model usage · CLIProxyAPI</title>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Model usage · CLIProxyAPI</title><link rel="icon" href="data:,">
 <style>
-:root{color-scheme:dark;--bg-primary:#10151d;--bg-secondary:#18212d;--text-primary:#e7edf5;--text-secondary:#9baec4;--border-color:#2c394a;--primary-color:#8cb8ff;font:14px/1.5 system-ui,sans-serif}*{box-sizing:border-box}[hidden]{display:none!important}body{margin:0;background:var(--bg-primary);color:var(--text-primary)}main{max-width:1500px;margin:auto;padding:32px}header,.controls,.legend,.cards{display:flex;gap:14px;align-items:center;flex-wrap:wrap}header{justify-content:space-between}h1{font-size:30px;letter-spacing:-1px;margin:2px 0}h2{font-size:17px;margin:0 0 18px}p{color:var(--text-secondary);margin:6px 0 18px}a{color:var(--primary-color)}button,select,input{font:inherit;background:var(--bg-secondary);color:var(--text-primary);border:1px solid var(--border-color);border-radius:7px;padding:9px 12px}button{cursor:pointer}button:hover{border-color:var(--primary-color)}label{color:var(--text-secondary);font-size:12px;display:grid;gap:4px}.controls{margin:22px 0}.cards{align-items:stretch}.card{flex:1;min-width:145px;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:12px;padding:17px}.card span{display:block;color:var(--text-secondary);font-size:12px}.card strong{font-size:26px;letter-spacing:-.7px;font-weight:600}.panel{margin-top:22px;padding:22px;border:1px solid var(--border-color);border-radius:12px;background:var(--bg-secondary)}.grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}.legend{font-size:12px;color:var(--text-secondary);gap:18px}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}.row{margin:14px 0}.row-label{display:flex;justify-content:space-between;gap:12px;margin-bottom:6px}.bar{height:14px;background:var(--bg-primary);border-radius:4px;overflow:hidden;display:flex}.segment{height:100%;min-width:0}.muted,small{color:var(--text-secondary)}.scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;white-space:nowrap;font-size:12px}th{text-align:left;color:var(--text-secondary);font-weight:500}th,td{padding:11px 12px;border-bottom:1px solid var(--border-color)}td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}td:first-child,th:first-child{padding-left:0}.badge{padding:3px 7px;border-radius:5px;background:var(--bg-primary)}#status{min-height:22px;color:var(--text-secondary);font-size:12px}.error{color:#ff9d9d!important}#connect{display:flex;gap:8px;flex-wrap:wrap}#connect input{min-width:240px}svg{width:100%;height:180px;display:block}#timeline-labels{display:flex;justify-content:space-between;color:var(--text-secondary);font-size:11px}details{margin-top:14px}summary{cursor:pointer;color:var(--primary-color)}.empty{padding:24px 0;color:var(--text-secondary)}@media(max-width:900px){main{padding:18px}.grid{grid-template-columns:1fr}.card strong{font-size:22px}}
-.embedded body{background:transparent;font-family:var(--console-font,system-ui,sans-serif)}.embedded main{max-width:none;padding:0}.embedded header>a,.embedded header small{display:none}.embedded h1{font-size:30px;letter-spacing:-.7px}.embedded header p{margin-top:6px}.embedded .panel{background:var(--bg-primary)}.embedded .card{background:var(--bg-secondary)}
+/* Console theme tokens. The management console overrides these at runtime so this page follows its theme. */
+:root{--bg-primary:#f0eee8;--bg-secondary:#faf9f5;--bg-tertiary:#e9e6df;--bg-hover:#e9e6df;--text-primary:#2d2a26;--text-secondary:#6d6760;--text-tertiary:#a29c95;--text-quaternary:#c0bab3;--border-color:#e3e1db;--border-primary:#d5d2cb;--border-hover:#cecac4;--primary-color:#8b8680;--danger-color:#c65746;--bg-error-light:#c657461a;--warning-border:#c6574659;--success-badge-bg:#d1fae5;--success-badge-text:#065f46;--success-badge-border:#6ee7b7;--failure-badge-bg:#c6574624;--failure-badge-text:#8a3a30;--failure-badge-border:#c6574659;--floating-surface:#fffdf9;--floating-shadow:0 12px 26px #00000024;--viz-success:#10b981;--viz-failure:#c65746;--ease-out-strong:cubic-bezier(.23,1,.32,1);--font:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen,Ubuntu,Cantarell,Fira Sans,Droid Sans,Helvetica Neue,sans-serif;--mono:ui-monospace,SF Mono,Cascadia Mono,JetBrains Mono,Fira Code,Menlo,Consolas,Liberation Mono,monospace;color-scheme:light;background:var(--bg-secondary);color:var(--text-primary);font:14px/1.5 var(--font);-webkit-font-smoothing:antialiased}
+@media (prefers-color-scheme:dark){:root:not(.embedded){--bg-primary:#1d1b18;--bg-secondary:#151412;--bg-tertiary:#262320;--bg-hover:#2e2a26;--text-primary:#f6f4f1;--text-secondary:#c9c3bb;--text-tertiary:#9c958d;--text-quaternary:#6f6962;--border-color:#3a3530;--border-primary:#4a453f;--border-hover:#5a544d;--bg-error-light:#c657462e;--warning-border:#c6574673;--success-badge-bg:#064e3b4d;--success-badge-text:#6ee7b7;--success-badge-border:#059669;--failure-badge-bg:#c657463d;--failure-badge-text:#f1b0a6;--failure-badge-border:#c6574680;--floating-surface:#2a2723;--floating-shadow:0 14px 30px #0006;--viz-success:#0fae78;--viz-failure:#cf4b3a;color-scheme:dark}}
+*{box-sizing:border-box}[hidden]{display:none!important}body{margin:0}
+main{max-width:1240px;margin:0 auto;padding:40px 24px;display:flex;flex-direction:column;gap:16px}
+.embedded,.embedded body{background:transparent}.embedded main{max-width:none;padding:0 0 24px}
+button,input,select{font:inherit;color:inherit}
+button:focus-visible,select:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--primary-color);outline-offset:2px}
+/* Page header, mirroring the console's page headers. */
+.head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:16px 24px;margin-bottom:4px}
+.copy{display:flex;flex-direction:column;gap:7px;min-width:0}
+h1{margin:0;font-size:clamp(26px,3.2vw,30px);font-weight:700;letter-spacing:-.02em;line-height:1.15}
+.meta{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;margin:0;font:500 13px var(--mono);letter-spacing:.02em;font-variant-numeric:tabular-nums;color:var(--text-secondary)}
+.meta:before{content:"▍";color:var(--viz-success);align-self:center;margin-right:1px;font-size:13px;line-height:1}
+.meta .dot{color:var(--text-quaternary);user-select:none}.meta .muted{color:var(--text-tertiary)}.meta .bad{color:var(--viz-failure)}
+.actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.ghost{display:inline-flex;align-items:center;gap:6px;padding:10px 14px;border:0;border-radius:9999px;background:none;color:var(--text-secondary);font-size:13px;font-weight:550;line-height:1;cursor:pointer;transition:color .2s var(--ease-out-strong),background-color .2s var(--ease-out-strong)}
+.ghost:hover{color:var(--text-primary);background:var(--bg-tertiary)}.ghost:disabled{opacity:.55;cursor:progress}.ghost.spin svg{animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* Provider tabs and toolbar. */
+.tabs{display:flex;gap:2px;min-width:0;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--border-color)}
+.tab{position:relative;display:inline-flex;align-items:center;gap:7px;flex-shrink:0;padding:8px 12px 11px;border:0;border-radius:8px 8px 0 0;background:none;color:var(--text-secondary);font-size:13px;font-weight:550;white-space:nowrap;cursor:pointer;transition:color .2s var(--ease-out-strong),background-color .2s var(--ease-out-strong)}
+.tab:after{content:"";position:absolute;left:10px;right:10px;bottom:-1px;height:2px;border-radius:9999px}
+.tab:hover{color:var(--text-primary);background:color-mix(in srgb,var(--bg-tertiary) 55%,transparent)}
+.tab[aria-selected=true]{color:var(--text-primary);font-weight:650}.tab[aria-selected=true]:after{background:var(--text-primary)}
+.tab i{width:8px;height:8px;border-radius:50%}
+.count{padding:0 6px;border-radius:9999px;background:color-mix(in srgb,var(--text-primary) 6%,transparent);color:var(--text-tertiary);font:650 10.5px/1.6 var(--mono);font-variant-numeric:tabular-nums}
+.tab[aria-selected=true] .count{color:var(--text-primary);background:color-mix(in srgb,var(--text-primary) 10%,transparent)}
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px}.toolbar .grow{flex:1}
+.segmented{display:inline-flex;align-items:center;gap:2px;padding:2px;border:1px solid var(--border-color);border-radius:9999px;background:var(--bg-tertiary)}
+.segmented button{padding:5px 12px;border:0;border-radius:9999px;background:none;color:var(--text-secondary);font-size:12px;font-weight:550;line-height:1.3;white-space:nowrap;cursor:pointer;transition:color .2s var(--ease-out-strong),background-color .2s var(--ease-out-strong),box-shadow .2s var(--ease-out-strong)}
+.segmented button:hover:not([aria-pressed=true]){color:var(--text-primary)}
+.segmented button[aria-pressed=true]{color:var(--text-primary);background:var(--floating-surface);font-weight:650;box-shadow:0 1px 3px #0000001f,0 1px 2px #00000014}
+.toolbar-label{color:var(--text-tertiary);font-size:12px}
+select{height:32px;max-width:260px;padding:0 30px 0 12px;border:1px solid var(--border-color);border-radius:9999px;background:var(--bg-secondary) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 4.5 3 3 3-3'/%3E%3C/svg%3E") no-repeat right 11px center;appearance:none;color:var(--text-secondary);font-size:12.5px;font-weight:550;cursor:pointer;transition:color .2s var(--ease-out-strong),border-color .2s var(--ease-out-strong)}
+select:hover{color:var(--text-primary);border-color:var(--border-hover)}select option{background:var(--bg-primary);color:var(--text-primary)}
+.status{min-height:18px;margin:-4px 0 0;color:var(--text-tertiary);font:12px var(--mono);letter-spacing:.01em}
+.banner{padding:9px 12px;border:1px solid var(--warning-border);border-radius:10px;background:var(--bg-error-light);color:var(--danger-color);font-size:12.5px;overflow-wrap:anywhere}
+/* Cards and panels, mirroring the console's credential cards. */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px}
+.card,.panel{border:1px solid var(--border-color);border-radius:14px;background:color-mix(in srgb,var(--bg-primary) 82%,transparent);transition:border-color .16s var(--ease-out-strong)}
+.card{display:flex;flex-direction:column;gap:6px;padding:16px;min-width:0}.card:hover,.panel:hover{border-color:var(--border-hover)}
+.label{color:var(--text-tertiary);font:700 10px var(--mono);letter-spacing:.12em;text-transform:uppercase}
+.value{font-size:26px;font-weight:700;letter-spacing:-.02em;line-height:1.15;font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.value.name{font-size:17px;line-height:1.75;letter-spacing:-.01em}
+.sub{color:var(--text-tertiary);font:550 11.5px var(--mono);font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sub .bad{color:var(--viz-failure)}.sub .ok{color:var(--viz-success)}
+.grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:16px}
+.panel{padding:18px 20px;min-width:0}
+.panel-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:14px}
+h2{margin:0;font-size:15px;font-weight:600;letter-spacing:-.005em}
+.hint{margin:3px 0 0;color:var(--text-secondary);font-size:12px;line-height:1.5}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(--text-secondary);font-size:12px}.legend span{display:inline-flex;align-items:center;gap:6px}
+.swatch{display:inline-block;flex:none;width:7px;height:7px;border-radius:50%}
+.empty{padding:28px 0;color:var(--text-tertiary);font-size:13px;text-align:center}
+/* Model bars. */
+.row{display:grid;gap:6px;padding:7px 0}
+.row-label{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:13px;font-weight:550}.row-label span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row-label b{color:var(--text-secondary);font:600 12px var(--mono);font-variant-numeric:tabular-nums}
+.bar{display:flex;gap:2px;height:8px;border-radius:9999px;background:var(--bg-tertiary);overflow:hidden}
+.segment{height:100%;min-width:2px;transition:width .4s var(--ease-out-strong)}
+/* Timeline chart. */
+.plot{position:relative}#timeline{display:block;width:100%;height:220px;overflow:visible}
+#timeline .grid-line{stroke:var(--border-color)}#timeline .base{stroke:var(--border-primary)}
+#timeline text{fill:var(--text-tertiary);font:11px var(--font);font-variant-numeric:tabular-nums}
+#timeline .hover{fill:color-mix(in srgb,var(--text-primary) 6%,transparent)}
+.tooltip{position:absolute;top:0;left:0;z-index:2;padding:7px 10px;border:1px solid var(--border-color);border-radius:8px;background:var(--floating-surface);box-shadow:var(--floating-shadow);font-size:12px;white-space:nowrap;pointer-events:none;opacity:0;transform:translate(-50%,calc(-100% - 6px));transition:opacity .15s var(--ease-out-strong)}
+.tooltip.visible{opacity:1}.tooltip b{display:block;font-size:13px;font-variant-numeric:tabular-nums}.tooltip>span{color:var(--text-tertiary)}
+.tooltip ul{display:grid;gap:3px;margin:6px 0 0;padding:6px 0 0;border-top:1px solid var(--border-color);list-style:none}.tooltip li{display:flex;align-items:center;gap:6px}
+.tooltip li span{flex:1;color:var(--text-secondary)}.tooltip li em{margin-left:12px;font-style:normal;font-weight:600;font-variant-numeric:tabular-nums}
+/* Token breakdown. */
+#token-bar{height:10px}
+.breakdown{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px 24px;margin-top:16px}
+.breakdown div{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:4px 8px;font-size:12.5px;color:var(--text-secondary)}
+.breakdown strong{color:var(--text-primary);font:600 12.5px var(--mono);font-variant-numeric:tabular-nums}.breakdown small{grid-column:2/4;color:var(--text-tertiary);font:11px var(--mono)}
+/* Tables. */
+.scroll{overflow-x:auto;margin:0 -20px;padding:0 20px}
+table{width:100%;border-collapse:collapse;white-space:nowrap;font-size:13px}
+th{padding:0 12px 9px;border-bottom:1px solid var(--border-color);text-align:left;color:var(--text-tertiary);font:700 10px var(--mono);letter-spacing:.1em;text-transform:uppercase}
+td{padding:8px 12px;border-bottom:1px solid color-mix(in srgb,var(--border-color) 70%,transparent)}
+tbody tr:last-child td{border-bottom:0}tbody tr:hover td{background:color-mix(in srgb,var(--bg-tertiary) 45%,transparent)}
+th:first-child,td:first-child{padding-left:0}th:last-child,td:last-child{padding-right:0}
+.num{text-align:right;font-family:var(--mono);font-size:12.5px;font-variant-numeric:tabular-nums}th.num{font-size:10px}
+.dim{color:var(--text-tertiary)}.muted{color:var(--text-secondary)}td.bad{color:var(--viz-failure)}.mono{font-family:var(--mono);font-size:11.5px}
+.more{margin:10px auto 0;display:flex}.chip{display:inline-flex;align-items:center;gap:6px}
+.pill{display:inline-block;padding:1px 8px;border:1px solid;border-radius:9999px;font-size:11.5px;font-weight:600}
+.pill.ok{background:var(--success-badge-bg);color:var(--success-badge-text);border-color:var(--success-badge-border)}
+.pill.fail{background:var(--failure-badge-bg);color:var(--failure-badge-text);border-color:var(--failure-badge-border)}
+.pill.warn{background:transparent;color:var(--text-secondary);border-color:var(--border-primary)}
+details{color:var(--text-secondary);font-size:12.5px}details p{max-width:900px;margin:8px 0}
+summary{width:max-content;color:var(--text-secondary);font-size:12.5px;font-weight:550;cursor:pointer}summary:hover{color:var(--text-primary)}
+/* Standalone login. */
+#connect{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+#connect input{min-width:260px;height:36px;padding:0 12px;border:1px solid var(--border-color);border-radius:10px;background:var(--bg-secondary);font-size:13px}
+#connect button{height:36px;padding:0 18px;border:0;border-radius:9999px;background:var(--text-primary);color:var(--bg-secondary);font-size:13px;font-weight:600;cursor:pointer}
+#connect small{color:var(--text-tertiary);font-size:12px}
+@media(max-width:1000px){.grid{grid-template-columns:1fr}}
+@media(max-width:640px){main{padding:20px 14px}.head{flex-direction:column;align-items:stretch}.value{font-size:22px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style></head><body><main>
-<header><div><small>CLIProxyAPI / Observe</small><h1>Model usage</h1><p>The models you picked, the providers they reached, and reported token usage.</p></div><a href="/management.html">Console</a></header>
+<header class="head"><div class="copy"><h1>Model usage</h1><p class="meta" id="meta"><span class="muted">Waiting for console session</span></p></div>
+<div class="actions"><button class="ghost" id="export" type="button"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M5 21h14"/></svg>Export JSON</button><button class="ghost" id="refresh" type="button"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/></svg>Refresh</button></div></header>
 <form id="connect"><input id="key" type="password" autocomplete="off" placeholder="Management key" aria-label="Management key"><button>Connect</button><small>Kept in this page's memory only.</small></form>
-<div class="controls"><label>Period<select id="period"><option value="24">Last 24 hours</option><option value="168">Last 7 days</option><option value="720">Last 30 days</option><option value="0">All retained history</option></select></label><label>Provider<select id="provider"><option value="">All providers</option></select></label><label>Requested model<select id="model"><option value="">All models</option></select></label><label>Rank models by<select id="rank"><option value="attempts">Execution attempts</option><option value="total">Reported tokens</option></select></label><button id="refresh">Refresh</button><button id="export">Export JSON</button></div>
-<div id="status" role="status">Connect with your console session or management key.</div>
-<div class="cards" id="cards"></div>
-<div class="grid"><section class="panel"><h2>Models by serving provider</h2><div id="legend" class="legend"></div><div id="models" class="empty">No history loaded.</div></section><section class="panel"><h2 id="timeline-title">Execution attempts over time</h2><p>Hourly buckets. All times shown in your local timezone.</p><svg id="timeline" role="img" aria-label="Hourly execution attempts by provider"></svg><div id="timeline-labels"></div></section></div>
-<section class="panel"><h2>Token breakdown</h2><p>Exclusive categories, so cache reads and reasoning are counted once.</p><div id="token-bar" class="bar" style="height:24px"></div><div id="token-legend" class="legend" style="margin-top:14px"></div></section>
-<section class="panel"><h2>Model routing</h2><p>Counts describe upstream execution attempts, including retries, rather than unique user messages. Each row is a requested model, routed model, response-reported model and provider combination. Missing response models stay unknown.</p><div class="scroll"><table><thead><tr><th>Requested</th><th>Routed</th><th>Response model</th><th>Provider</th><th class="num">Attempts</th><th class="num">Failed</th><th class="num">Uncached input</th><th class="num">Cache read</th><th class="num">Cache write</th><th class="num">Output</th><th class="num">Reasoning</th><th class="num">Unclassified</th><th class="num">Total</th></tr></thead><tbody id="routing"></tbody></table></div></section>
-<section class="panel"><h2>Recent execution attempts</h2><p>The latest 100 matching attempts in arrival order. Failed retries remain visible. A trace identifies attempts belonging to the same inbound request when available.</p><div class="scroll"><table><thead><tr><th>Started</th><th>Requested</th><th>Provider / credential index</th><th>Status</th><th class="num">Tokens</th><th class="num">Cache read</th><th class="num">Latency</th><th>Trace / execution</th></tr></thead><tbody id="recent"></tbody></table></div></section>
+<nav class="tabs" id="provider-tabs" role="tablist" aria-label="Serving provider"></nav>
+<div class="toolbar"><div class="segmented" id="period" role="group" aria-label="Period"><button type="button" data-value="24" aria-pressed="true">24 hours</button><button type="button" data-value="168" aria-pressed="false">7 days</button><button type="button" data-value="720" aria-pressed="false">30 days</button><button type="button" data-value="0" aria-pressed="false">All history</button></div>
+<select id="model" aria-label="Requested model"><option value="">All requested models</option></select><span class="grow"></span>
+<span class="toolbar-label">Rank by</span><div class="segmented" id="rank" role="group" aria-label="Rank models by"><button type="button" data-value="attempts" aria-pressed="true">Attempts</button><button type="button" data-value="total" aria-pressed="false">Tokens</button></div></div>
+<div id="banner" class="banner" role="alert" hidden></div>
+<div class="stats" id="cards"></div>
+<div class="grid"><section class="panel"><div class="panel-head"><div><h2>Models by serving provider</h2><p class="hint" id="models-hint">Top requested models, split by the provider that served them.</p></div></div><div id="legend" class="legend"></div><div id="models"><div class="empty">No history loaded.</div></div></section>
+<section class="panel"><div class="panel-head"><div><h2 id="timeline-title">Execution attempts over time</h2><p class="hint" id="timeline-hint">Local time.</p></div></div><div class="plot" id="plot"><svg id="timeline" role="img" aria-label="Usage over time by provider"></svg><div class="tooltip" id="tooltip" aria-hidden="true"></div></div></section></div>
+<section class="panel"><div class="panel-head"><div><h2>Token breakdown</h2><p class="hint">Exclusive categories, so cache reads and reasoning are counted once.</p></div></div><div id="token-bar" class="bar"></div><div id="token-legend" class="breakdown"></div></section>
+<section class="panel"><div class="panel-head"><div><h2>Model routing</h2><p class="hint">Each row is one requested model, routed model, response-reported model and provider combination. Counts are upstream execution attempts, including retries.</p></div></div><div class="scroll"><table><thead><tr><th>Requested</th><th>Routed</th><th>Response model</th><th>Provider</th><th class="num">Attempts</th><th class="num">Failed</th><th class="num">Uncached in</th><th class="num">Cache read</th><th class="num">Cache write</th><th class="num">Output</th><th class="num">Reasoning</th><th class="num">Other</th><th class="num">Total</th></tr></thead><tbody id="routing"></tbody></table></div></section>
+<section class="panel"><div class="panel-head"><div><h2>Recent execution attempts</h2><p class="hint">The latest 100 matching attempts, newest first. A trace groups attempts from the same inbound request when available.</p></div></div><div class="scroll"><table><thead><tr><th>Started</th><th>Requested</th><th>Provider</th><th>Credential</th><th>Status</th><th class="num">Tokens</th><th class="num">Cache read</th><th class="num">Latency</th><th>Trace</th></tr></thead><tbody id="recent"></tbody></table></div><button class="ghost more" id="recent-more" type="button" hidden></button></section>
 <details><summary>Coverage and limits</summary><p>Capture starts when this build runs with usage statistics enabled. Existing access logs cannot reconstruct historical token usage. Completed upstream execution attempts are recorded; authentication and validation failures before execution are outside this view. Failed attempts can have unknown token consumption. Cache hits mean a provider reported cache-read tokens, not a proxy response cache. A response-reported model is an upstream claim. Hidden routing inside an external provider is not observable.</p><p>The journal retains two segments of up to 32 MiB and the latest 100,000 retained attempts in memory. Old history is evicted as these bounds are reached. Writes are buffered by the operating system, so abrupt power loss can lose recent records. Persistence errors are shown above. No prompts, completions, API keys, OAuth tokens, or response headers are saved. Subscription price and quota conversion are not inferred from token counts.</p></details>
 </main><script src="/usage-insights/app.js"></script></body></html>
