@@ -2,7 +2,7 @@
 
 ## Fork changes
 
-- Model usage insights at `/usage-insights/`, linked from the console: execution-count ranking and timeline by default, requested, routed and response-reported models by provider, reported token categories, hourly history, failures, request details and JSON export. Keeps up to 100,000 attempts in memory and two 32 MiB journal segments beside the config. Respects `usage-statistics-enabled`; stores no prompts or API keys. No skill tracking or subscription cost estimates.
+- Model usage insights under Observe > Model usage, opening inside the console with its active navigation, session and live theme: execution-count ranking and timeline by default, requested, routed and response-reported models by provider, reported token categories, hourly history, failures, request details and JSON export. Keeps up to 100,000 attempts in memory and two 32 MiB journal segments beside the config. Respects `usage-statistics-enabled`; stores no prompts or API keys. No skill tracking or subscription cost estimates.
 - Quota outlook in Observe → Quota Management: pooled remaining quota with forecast and drain-rate charts, following the console session, provider tab and theme.
 - Quota history (Claude, Codex, Kimi): hourly quota checks plus console refreshes, kept 14 days (`/v8/management/quota/history`).
 - Forecast: weekly limits (monthly when a subscription has none), average daily pace, refills at each reset, and work from an exhausted subscription moved to the provider's others by measured size.

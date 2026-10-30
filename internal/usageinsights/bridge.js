@@ -1,24 +1,47 @@
 /* Add a fork-owned navigation entry without changing the downloaded console. */
 (() => {
   'use strict';
-  let authorization='', child=null;
+  let authorization='', frame=null, lastSession='';
+  const usageRoute = '#/quota?view=model-usage';
+  const isUsage = () => /^#\/quota\/?\?/.test(location.hash) && new URLSearchParams(location.hash.split('?')[1]).get('view') === 'model-usage';
+  let restoreInitialView=isUsage();
+  document.addEventListener('click',event=>{if(event.target.closest?.('a'))restoreInitialView=false;},true);
   const originalFetch=window.fetch;
-  function capture(url,headers){try{const u=new URL(url,location.href);if(u.origin!==location.origin||!/^\/v(?:0|8)\/management\//.test(u.pathname))return;const auth=new Headers(headers).get('Authorization');if(auth&&/^Bearer\s+\S+/i.test(auth))authorization=auth;}catch{/* Ignore non-URL requests. */}}
+  function capture(url,headers){try{const u=new URL(url,location.href);if(u.origin!==location.origin||!/^\/v(?:0|8)\/management\//.test(u.pathname))return;const auth=new Headers(headers).get('Authorization');if(auth&&/^Bearer\s+\S+/i.test(auth)){authorization=auth;sendSession();}}catch{/* Ignore non-URL requests. */}}
   window.fetch=function(input,init){capture(input instanceof Request?input.url:input,init?.headers||(input instanceof Request?input.headers:undefined));return originalFetch.apply(this,arguments);};
   const open=XMLHttpRequest.prototype.open,set=XMLHttpRequest.prototype.setRequestHeader,urls=new WeakMap();
   XMLHttpRequest.prototype.open=function(method,url){urls.set(this,url);return open.apply(this,arguments);};
   XMLHttpRequest.prototype.setRequestHeader=function(name,value){if(name.toLowerCase()==='authorization')capture(urls.get(this),{Authorization:value});return set.apply(this,arguments);};
+  function sendSession(force=false) {
+    if(!frame?.contentWindow) return;
+    const vars={}, style=getComputedStyle(document.documentElement);
+    for(const name of ['--bg-primary','--bg-secondary','--bg-tertiary','--text-primary','--text-secondary','--border-color','--primary-color']) {
+      const value=style.getPropertyValue(name).trim();
+      if(value) vars[name]=value;
+    }
+    vars['--console-font']=getComputedStyle(document.body).fontFamily;
+    const session={type:'usage-insights-session',authorization,vars,theme:document.documentElement.getAttribute('data-theme')==='dark'?'dark':'light'};
+    const serialized=JSON.stringify(session);
+    if(!force && serialized===lastSession) return;
+    lastSession=serialized;
+    frame.contentWindow.postMessage(session,location.origin);
+  }
   function openUsage(event) {
     event.preventDefault();
     event.stopPropagation();
-    child=window.open('/usage-insights/','cliproxy-model-usage');
+    location.hash=usageRoute;
   }
   function mount() {
     const quotaLink=document.querySelector('a[href="#/quota"], a[href="#/quota/"]');
+    if(quotaLink && restoreInitialView && !isUsage() && !/^#\/login/.test(location.hash)) {
+      restoreInitialView=false;
+      location.replace(usageRoute);
+      return;
+    }
     if(quotaLink && !document.getElementById('usage-insights-nav')) {
       const link=quotaLink.cloneNode(true);
       link.id='usage-insights-nav';
-      link.href='/usage-insights/';
+      link.href=usageRoute;
       link.classList.remove('active');
       link.removeAttribute('aria-current');
       link.setAttribute('aria-label','Model usage');
@@ -27,30 +50,56 @@
       link.onclick=openUsage;
       quotaLink.after(link);
     }
-    const section=document.getElementById('usage-insights-quota-entry');
+    const active=isUsage();
+    const link=document.getElementById('usage-insights-nav');
+    link?.classList.toggle('active',active);
+    if(active) link?.setAttribute('aria-current','page'); else link?.removeAttribute('aria-current');
     const main=document.querySelector('main.main-content');
-    if(!/^#\/quota\/?(?:\?|$)/.test(location.hash) || !main) { section?.remove(); return; }
-    if(section) return;
-    const entry=document.createElement('section');
-    entry.id='usage-insights-quota-entry';
-    entry.setAttribute('aria-label','Model usage');
-    entry.style.cssText='display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:16px 20px;margin:16px 0;border:1px solid var(--border-color,#ddd);border-radius:12px;background:var(--bg-secondary,transparent);color:var(--text-primary,inherit);';
-    const text=document.createElement('div'), heading=document.createElement('strong'), description=document.createElement('div');
-    heading.textContent='Model usage';
-    description.textContent='See which models and providers serve your requests, with execution counts, cache reads and reported tokens.';
-    description.style.cssText='margin-top:4px;color:var(--text-secondary,inherit);font-size:13px;';
-    text.append(heading,description);
-    const link=document.createElement('a');
-    link.href='/usage-insights/';
-    link.textContent='Open model usage';
-    link.style.cssText='padding:8px 12px;border:1px solid var(--border-color,#ddd);border-radius:8px;color:var(--primary-color,inherit);text-decoration:none;white-space:nowrap;';
-    link.onclick=openUsage;
-    entry.append(text,link);
-    const tabs=main.querySelector('[class*="QuotaPage-module__tabsRow"]');
-    if(tabs) tabs.after(entry); else main.prepend(entry);
+    if(!main) return;
+    main.classList.toggle('usage-insights-view',active);
+    document.body.classList.toggle('usage-insights-open',active);
+    if(!active) {
+      document.getElementById('usage-insights-page')?.remove();
+      frame=null; lastSession='';
+      return;
+    }
+    if(!document.getElementById('usage-insights-style')) {
+      const style=document.createElement('style');
+      style.id='usage-insights-style';
+      style.textContent='main.usage-insights-view{position:relative}main.usage-insights-view>:not(#usage-insights-page){position:absolute!important;left:0;right:0;top:0;visibility:hidden!important;pointer-events:none!important}' +
+        '.usage-insights-open a[href="#/quota"].active{background:transparent!important;box-shadow:none!important;border-color:transparent!important;color:var(--text-secondary,inherit)!important}';
+      document.head.append(style);
+    }
+    if(!frame?.isConnected) {
+      const section=document.createElement('section');
+      section.id='usage-insights-page';
+      section.setAttribute('aria-label','Model usage');
+      frame=document.createElement('iframe');
+      frame.title='Model usage';
+      frame.src='/usage-insights/?embedded=1';
+      frame.style.cssText='display:block;width:100%;min-height:700px;height:100vh;border:0;background:transparent;';
+      frame.addEventListener('load',()=>sendSession(true));
+      section.append(frame); main.append(section);
+      lastSession='';
+    }
+    sendSession();
   }
-  window.addEventListener('message',e=>{if(e.origin!==location.origin||e.source!==child||e.data?.type!=='usage-insights-ready')return;const vars={},style=getComputedStyle(document.documentElement);for(const name of ['--bg-primary','--bg-secondary','--text-primary','--text-secondary','--border-color','--primary-color']){const v=style.getPropertyValue(name).trim();if(v)vars[name]=v;}child.postMessage({type:'usage-insights-session',authorization,vars,theme:document.documentElement.getAttribute('data-theme')==='dark'?'dark':'light'},location.origin);});
-  window.addEventListener('hashchange',()=>{if(/^#\/login/.test(location.hash)){authorization='';if(child&&!child.closed)child.postMessage({type:'usage-insights-session',authorization:''},location.origin);}});
-  window.addEventListener('hashchange',mount);
-  new MutationObserver(mount).observe(document.documentElement,{childList:true,subtree:true});mount();
+  window.addEventListener('message',event=>{
+    if(event.origin!==location.origin || event.source!==frame?.contentWindow) return;
+    if(event.data?.type==='usage-insights-ready') sendSession(true);
+    if(event.data?.type==='usage-insights-height' && Number.isFinite(event.data.height)) {
+      const height=Math.max(700,Math.min(30000,event.data.height));
+      if(frame.style.height!==height+'px') frame.style.height=height+'px';
+    }
+  });
+  window.addEventListener('hashchange',()=>{
+    if(/^#\/login/.test(location.hash)) { authorization=''; sendSession(true); }
+    mount();
+  });
+  for(const method of ['pushState','replaceState']) {
+    const original=history[method];
+    history[method]=function(){const result=original.apply(this,arguments);mount();return result;};
+  }
+  new MutationObserver(mount).observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['data-theme']});
+  mount();
 })();

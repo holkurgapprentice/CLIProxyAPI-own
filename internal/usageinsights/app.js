@@ -4,6 +4,9 @@
   const palette = ['#80b5ff','#e9a777','#9dd5ac','#c8a1ee','#e7ca74','#72ced0','#ee91b5'];
   const known = {codex:'#80b5ff',claude:'#e9a777',gemini:'#9dd5ac',antigravity:'#c8a1ee',kimi:'#e7ca74'};
   function color(name) { let h=0; for(const c of name) h=(h*31+c.charCodeAt(0))>>>0; return known[name] || palette[h%palette.length]; }
+  const embedded=window.parent!==window;
+  const sessionHost=embedded?window.parent:window.opener;
+  if(embedded){document.documentElement.classList.add('embedded');$('connect').hidden=true;}
   let authorization='', data=null, busy=false, pending=false;
   function node(tag,text,cls) { const e=document.createElement(tag); if(text!=null)e.textContent=text; if(cls)e.className=cls; return e; }
   function legend(parent,label,c) { const el=node('span'), dot=node('i',null,'dot'); dot.style.background=c; el.append(dot,document.createTextNode(label));parent.append(el); }
@@ -12,7 +15,7 @@
   async function load() {
     if(!authorization)return;if(busy){pending=true;return;}busy=true;
     try { data=await request(params()); render(data); $('connect').hidden=true; }
-    catch(e){$('status').textContent=e.message;$('status').className='error';$('connect').hidden=false;}
+    catch(e){$('status').textContent=e.message;$('status').className='error';$('connect').hidden=embedded;}
     finally{busy=false;if(pending){pending=false;load();}}
   }
   function options(id,values) { const el=$(id),previous=el.value;for(const v of values.sort())if(![...el.options].some(o=>o.value===v))el.add(new Option(v,v));el.value=previous; }
@@ -40,7 +43,8 @@
   $('connect').addEventListener('submit',e=>{e.preventDefault();authorization='Bearer '+$('key').value.trim();$('key').value='';load();});
   for(const id of ['period','provider','model'])$(id).addEventListener('change',load);$('rank').addEventListener('change',()=>data&&render(data));$('refresh').onclick=load;
   $('export').onclick=async()=>{if(!authorization)return;try{const p=params();p.set('export','1');const events=await request(p),url=URL.createObjectURL(new Blob([JSON.stringify(events,null,2)],{type:'application/json'})),a=node('a');a.href=url;a.download='usage-insights.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}catch(e){$('status').textContent=e.message;$('status').className='error';}};
-  window.addEventListener('message',e=>{if(e.origin!==location.origin||e.source!==window.opener||e.data?.type!=='usage-insights-session')return;authorization=e.data.authorization||'';for(const [k,v]of Object.entries(e.data.vars||{}))if(k.startsWith('--')&&typeof v==='string')document.documentElement.style.setProperty(k,v);if(e.data.theme)document.documentElement.style.colorScheme=e.data.theme;load();});
-  if(window.opener)window.opener.postMessage({type:'usage-insights-ready'},location.origin);
+  window.addEventListener('message',e=>{if(e.origin!==location.origin||e.source!==sessionHost||e.data?.type!=='usage-insights-session')return;const nextAuthorization=e.data.authorization||'',changed=authorization!==nextAuthorization;authorization=nextAuthorization;for(const [k,v]of Object.entries(e.data.vars||{}))if(k.startsWith('--')&&typeof v==='string')document.documentElement.style.setProperty(k,v);if(e.data.theme)document.documentElement.style.colorScheme=e.data.theme;if(authorization&&(changed||!data))load();});
+  if(sessionHost)sessionHost.postMessage({type:'usage-insights-ready'},location.origin);
+  if(embedded)new ResizeObserver(()=>window.parent.postMessage({type:'usage-insights-height',height:document.body.scrollHeight},location.origin)).observe(document.body);
   setInterval(()=>{if(!document.hidden)load();},15000);
 })();

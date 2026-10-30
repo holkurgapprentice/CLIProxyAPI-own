@@ -12,7 +12,8 @@
     '--floating-surface', '--floating-shadow', '--ease-out-strong'];
   // Provider tab order used by the console quota page; labels are translated, so match by position.
   const PROVIDER_TABS = ['all', 'claude', 'antigravity', 'codex', 'xai', 'kimi', 'devin', 'meta', 'plugin'];
-  const isQuota = () => /^#\/quota\/?(?:\?|$)/.test(location.hash);
+  const isQuota = () => /^#\/quota\/?(?:\?|$)/.test(location.hash) &&
+    new URLSearchParams(location.hash.split('?')[1] || '').get('view') !== 'model-usage';
   const tabsRow = () => document.querySelector('[class*="QuotaPage-module__tabsRow"]');
   function activeProvider() {
     const tabs = [...(tabsRow()?.querySelectorAll('button[aria-pressed]') || [])];

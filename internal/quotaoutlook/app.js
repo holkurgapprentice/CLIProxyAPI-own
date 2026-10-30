@@ -203,7 +203,7 @@ function draw(animate){
  svg.append(cross,focus);
  if(animate&&!reduced.matches){
   const start=performance.now(),duration=spec.now?1100:900;
-  const grow=t=>{if(!reveal.isConnected)return;const k=Math.min(1,(t-start)/duration);reveal.setAttribute('width',W*(1-Math.pow(1-k,3)));if(k<1)requestAnimationFrame(grow);};
+  const grow=t=>{if(!reveal.isConnected)return;const k=Math.max(0,Math.min(1,(t-start)/duration));reveal.setAttribute('width',W*(1-Math.pow(1-k,3)));if(k<1)requestAnimationFrame(grow);};
   requestAnimationFrame(grow);
  }
  const legend=$('legend');legend.replaceChildren();
