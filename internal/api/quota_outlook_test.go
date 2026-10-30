@@ -30,6 +30,9 @@ func TestQuotaOutlookAssetsAndManagementIntegration(t *testing.T) {
 			t.Fatalf("%s status=%d", path, response.Code)
 		}
 		if path == "/management.html" {
+			if response.Header().Get("Cache-Control") != "no-store" {
+				t.Fatal("management shell must reload injected integrations after promotion")
+			}
 			body := response.Body.String()
 			if !strings.Contains(body, `<head><script src="/quota-outlook/management.js"></script><script src="/usage-insights/bridge.js"></script><script>consoleBundle()`) || strings.Contains(body, "position:fixed") {
 				t.Fatal("management bridge must precede console bundle without a floating link")
