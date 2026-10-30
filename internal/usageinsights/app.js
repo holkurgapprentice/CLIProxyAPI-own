@@ -5,16 +5,26 @@
   // Provider colors match the quota outlook so the same provider reads the same everywhere in the console.
   const known = {claude:'#d97757',codex:'#6f93e8',gemini:'#4fb3bb',antigravity:'#a77bea',kimi:'#c9a227',xai:'#8f94c8',devin:'#4fae8c',meta:'#5b8def'};
   const palette = ['#4fae8c','#d670a0','#c9a227','#a77bea','#4fb3bb','#8f94c8'];
-  function color(name) { const key=Object.keys(known).find(k=>name.toLowerCase().includes(k)); if(key) return known[key]; let h=0; for(const c of name) h=(h*31+c.charCodeAt(0))>>>0; return palette[h%palette.length]; }
+  const brand = window.UsageInsightsIcons || {icons:{},labels:{},aliases:{},tiled:[]};
+  // Normalize like the console so executor identifiers resolve to the same provider family.
+  function family(name) { const key=String(name||'').trim().toLowerCase().replace(/_/g,'-'); return brand.aliases[key]||key; }
+  function color(name) { const key=family(name); if(known[key]) return known[key]; let h=0; for(const c of key) h=(h*31+c.charCodeAt(0))>>>0; return palette[h%palette.length]; }
+  function providerLabel(name) { return brand.labels[family(name)]||name; }
+  function icon(name) {
+    const key=family(name), src=brand.icons[key], wrap=node('span',null,'icon');
+    if(src){const img=node('img');img.alt='';img.src=typeof src==='string'?src:src[theme]||src.light;wrap.append(img);if(brand.tiled.includes(key))wrap.style.background=theme==='dark'?'#ffffff':'#000000';}
+    else wrap.append(node('b',providerLabel(name).slice(0,1).toUpperCase()));
+    return wrap;
+  }
   const TOKEN_KINDS = [['Uncached input','uncached','#6f93e8'],['Cache read','cache_read','#4fb3bb'],['Cache write','cache_write','#a77bea'],['Output','output','#4fae8c'],['Reasoning','reasoning','#d97757'],['Unclassified','unclassified','#d670a0']];
   const embedded=window.parent!==window;
   const sessionHost=embedded?window.parent:window.opener;
   if(embedded){document.documentElement.classList.add('embedded');$('connect').hidden=true;}
-  let authorization='', data=null, providerTotals=null, busy=false, pending=false, provider='', chart=null, showAllRecent=false;
+  let theme=!embedded&&matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light', authorization='', data=null, providerTotals=null, busy=false, pending=false, provider='', chart=null, showAllRecent=false;
   function node(tag,text,cls) { const e=document.createElement(tag); if(text!=null)e.textContent=text; if(cls)e.className=cls; return e; }
   function swatch(c) { const s=node('i',null,'swatch'); s.style.background=c; return s; }
-  function legend(parent,label,c) { const el=node('span'); el.append(swatch(c),document.createTextNode(label)); parent.append(el); }
-  function chip(name) { const el=node('span',null,'chip'); el.append(swatch(color(name)),document.createTextNode(name)); return el; }
+  function legend(parent,name) { const el=node('span'); el.append(swatch(color(name)),icon(name),document.createTextNode(providerLabel(name))); el.title=name; parent.append(el); }
+  function chip(name) { const el=node('span',null,'chip'); el.append(icon(name),document.createTextNode(providerLabel(name))); el.title=name; return el; }
   function selected(id) { return $(id).querySelector('[aria-pressed=true]').dataset.value; }
   function segmented(id,onChange) { $(id).addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.getAttribute('aria-pressed')==='true')return;for(const x of $(id).children)x.setAttribute('aria-pressed',String(x===b));onChange();}); }
   function params(withProvider=true) { const p=new URLSearchParams(), hours=+selected('period'); if(hours)p.set('from',new Date(Date.now()-hours*HOUR).toISOString()); if(withProvider&&provider)p.set('provider',provider); if($('model').value)p.set('model',$('model').value); return p; }
@@ -36,8 +46,8 @@
     tabs.replaceChildren();
     for(const [name,count] of [['',total],...[...counts].sort((a,b)=>b[1]-a[1])]) {
       const tab=node('button',null,'tab'); tab.type='button'; tab.setAttribute('role','tab'); tab.setAttribute('aria-selected',String(name===provider));
-      if(name)tab.append(swatch(color(name)));
-      tab.append(node('span',name||'All'),node('span',compact(count),'count'));
+      if(name){tab.append(icon(name));tab.title=name;}
+      tab.append(node('span',name?providerLabel(name):'All'),node('span',compact(count),'count'));
       tab.onclick=()=>{if(provider===name)return;provider=name;load();};
       tabs.append(tab);
     }
@@ -66,13 +76,13 @@
   }
   function renderModels(models,providers) {
     const rank=selected('rank'), max=Math.max(1,...models.map(m=>m.total));
-    $('legend').replaceChildren(); providers.forEach(p=>legend($('legend'),p,color(p))); $('legend').hidden=providers.length<2;
+    $('legend').replaceChildren(); providers.forEach(p=>legend($('legend'),p)); $('legend').hidden=providers.length<2;
     $('models-hint').textContent=`Top requested models by ${rank==='attempts'?'execution attempts':'reported tokens'}, split by the provider that served them.`;
     $('models').replaceChildren();
     for(const m of models.slice(0,10)) {
       const row=node('div',null,'row'),label=node('div',null,'row-label'),bar=node('div',null,'bar'),name=node('span',m.name);
       name.title=m.name; label.append(name,node('b',rank==='attempts'?fmt(m.total):compact(m.total)));
-      for(const [p,v] of [...m.p].sort((a,b)=>b[1]-a[1])){const seg=node('div',null,'segment');seg.style.width=100*v/max+'%';seg.style.background=color(p);seg.title=`${p}: ${fmt(v)}`;bar.append(seg);}
+      for(const [p,v] of [...m.p].sort((a,b)=>b[1]-a[1])){const seg=node('div',null,'segment');seg.style.width=100*v/max+'%';seg.style.background=color(p);seg.title=`${providerLabel(p)}: ${fmt(v)}`;bar.append(seg);}
       row.append(label,bar); $('models').append(row);
     }
     if(!models.length)$('models').append(node('div','No attempts in this period. Send traffic through this instance to begin.','empty'));
@@ -154,7 +164,7 @@
     const b=chart.bins[i], unit=chart.rank==='attempts'?'attempts':'tokens', from=new Date(b.at), to=new Date(b.at+chart.step*HOUR);
     chart.hover.setAttribute('x',chart.left+i*chart.slot); chart.hover.setAttribute('opacity',1);
     const head=node('b',`${chart.rank==='attempts'?fmt(b.total):compact(b.total)} ${unit}`), when=node('span',`${from.toLocaleString(undefined,{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})} – ${to.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'})}`), list=node('ul');
-    for(const [p,v] of [...b.values].sort((x,y)=>y[1]-x[1])){const li=node('li');li.append(swatch(color(p)),node('span',p),node('em',fmt(v)));list.append(li);}
+    for(const [p,v] of [...b.values].sort((x,y)=>y[1]-x[1])){const li=node('li');li.append(swatch(color(p)),icon(p),node('span',providerLabel(p)),node('em',fmt(v)));list.append(li);}
     tip.replaceChildren(head,when); if(list.children.length)tip.append(list);
     const plot=$('plot').getBoundingClientRect(), x=chart.left+i*chart.slot+chart.slot/2, half=tip.offsetWidth/2;
     tip.style.left=Math.min(plot.width-half,Math.max(half,x))+'px'; tip.style.top='16px'; tip.style.transform='translate(-50%,-100%)'; tip.classList.add('visible');
@@ -166,7 +176,7 @@
   segmented('period',load); segmented('rank',()=>data&&render()); $('model').addEventListener('change',load); $('refresh').onclick=load;
   $('recent-more').onclick=()=>{showAllRecent=!showAllRecent;if(data)renderTables(data);};
   $('export').onclick=async()=>{if(!authorization)return;try{const p=params();p.set('export','1');const events=await request(p),url=URL.createObjectURL(new Blob([JSON.stringify(events,null,2)],{type:'application/json'})),a=node('a');a.href=url;a.download='usage-insights.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}catch(e){showError(e.message);}};
-  window.addEventListener('message',e=>{if(e.origin!==location.origin||e.source!==sessionHost||e.data?.type!=='usage-insights-session')return;const nextAuthorization=e.data.authorization||'',changed=authorization!==nextAuthorization;authorization=nextAuthorization;for(const [k,v]of Object.entries(e.data.vars||{}))if(k.startsWith('--')&&typeof v==='string')document.documentElement.style.setProperty(k,v);if(e.data.theme)document.documentElement.style.colorScheme=e.data.theme;if(authorization&&(changed||!data))load();});
+  window.addEventListener('message',e=>{if(e.origin!==location.origin||e.source!==sessionHost||e.data?.type!=='usage-insights-session')return;const nextAuthorization=e.data.authorization||'',changed=authorization!==nextAuthorization;authorization=nextAuthorization;for(const [k,v]of Object.entries(e.data.vars||{}))if(k.startsWith('--')&&typeof v==='string')document.documentElement.style.setProperty(k,v);if(e.data.theme){document.documentElement.style.colorScheme=e.data.theme;if(e.data.theme!==theme){theme=e.data.theme;if(data)render();}}if(authorization&&(changed||!data))load();});
   if(sessionHost)sessionHost.postMessage({type:'usage-insights-ready'},location.origin);
   if(embedded)new ResizeObserver(()=>window.parent.postMessage({type:'usage-insights-height',height:document.body.scrollHeight},location.origin)).observe(document.body);
   setInterval(()=>{if(!document.hidden)load();},15000);

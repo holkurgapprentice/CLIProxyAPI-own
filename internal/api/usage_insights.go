@@ -36,7 +36,7 @@ func (s *Server) serveUsageInsights(c *gin.Context) {
 		name = "index.html"
 		mime = "text/html; charset=utf-8"
 	}
-	if name != "index.html" && name != "app.js" && name != "bridge.js" {
+	if name != "index.html" && name != "app.js" && name != "bridge.js" && name != "icons.js" {
 		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
