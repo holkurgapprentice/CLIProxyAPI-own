@@ -343,7 +343,7 @@ func (s *Server) serveManagementControlPanel(c *gin.Context) {
 		return
 	}
 	// Install the session bridge before the console bundle starts making requests.
-	bridge := []byte(`<script src="/quota-outlook/management.js"></script>`)
+	bridge := []byte(`<script src="/quota-outlook/management.js"></script><script src="/usage-insights/bridge.js"></script>`)
 	data = bytes.Replace(data, []byte("<head>"), append([]byte("<head>"), bridge...), 1)
 	c.Data(http.StatusOK, "text/html; charset=utf-8", data)
 }

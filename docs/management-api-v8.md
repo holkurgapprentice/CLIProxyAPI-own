@@ -98,6 +98,7 @@ retain the corresponding business operation's fields.
 | `/observability/logs/requests/<id>` | GET | Get a request log. |
 | `/observability/usage/api-keys` | GET | Get API-key usage. |
 | `/observability/usage/queue` | GET | Get queued usage events. |
+| `/observability/usage/insights` | GET | Read persistent execution history without consuming usage events. Optional `from` and exclusive `to` are RFC3339 timestamps; `provider` and `model` filter exact provider and requested-model names. `export=1` returns matching credential-free event records instead of totals, routing groups, hourly provider buckets, recent attempts. |
 | `/credentials` | GET, POST, DELETE | List, upload, or delete credential files. |
 | `/credentials/models` | GET | Get credential models. |
 | `/credentials/download` | GET | Download a credential file. |

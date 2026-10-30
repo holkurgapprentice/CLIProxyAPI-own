@@ -31,7 +31,7 @@ func TestQuotaOutlookAssetsAndManagementIntegration(t *testing.T) {
 		}
 		if path == "/management.html" {
 			body := response.Body.String()
-			if !strings.Contains(body, `<head><script src="/quota-outlook/management.js"></script><script>consoleBundle()`) || strings.Contains(body, "position:fixed") {
+			if !strings.Contains(body, `<head><script src="/quota-outlook/management.js"></script><script src="/usage-insights/bridge.js"></script><script>consoleBundle()`) || strings.Contains(body, "position:fixed") {
 				t.Fatal("management bridge must precede console bundle without a floating link")
 			}
 		}

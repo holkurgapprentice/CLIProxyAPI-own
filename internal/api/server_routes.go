@@ -56,6 +56,7 @@ func (s *Server) setupRoutes() {
 
 	s.engine.GET("/management.html", s.serveManagementControlPanel)
 	s.engine.GET("/quota-outlook/*asset", s.serveQuotaOutlook)
+	s.engine.GET("/usage-insights/*asset", s.serveUsageInsights)
 	openaiHandlers := openai.NewOpenAIAPIHandler(s.handlers)
 	geminiHandlers := gemini.NewGeminiAPIHandler(s.handlers)
 	claudeCodeHandlers := claude.NewClaudeCodeAPIHandler(s.handlers)

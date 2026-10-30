@@ -81,5 +81,6 @@ docker-compose.override.yml
 /LOCAL-CREDENTIALS.txt
 /quota-history.json
 /quota-history.json.tmp
+/usage-insights.jsonl*
 
 /.playwright-mcp/
