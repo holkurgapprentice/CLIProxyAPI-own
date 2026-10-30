@@ -16,7 +16,7 @@ func (h *Handler) UsageInsights(c *gin.Context) {
 		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "usage history unavailable"})
 		return
 	}
-	f := usageinsights.Filter{Provider: c.Query("provider"), Model: c.Query("model")}
+	f := usageinsights.Filter{Provider: c.Query("provider"), Model: c.Query("model"), Account: c.Query("account")}
 	for name, target := range map[string]*time.Time{"from": &f.From, "to": &f.To} {
 		if value := c.Query(name); value != "" {
 			parsed, err := time.Parse(time.RFC3339, value)

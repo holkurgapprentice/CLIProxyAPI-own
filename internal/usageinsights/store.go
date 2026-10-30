@@ -169,8 +169,8 @@ func (s *Store) append(e Event) (errResult error) {
 }
 
 type Filter struct {
-	From, To        time.Time
-	Provider, Model string
+	From, To                 time.Time
+	Provider, Model, Account string
 }
 
 type Counts struct {
@@ -245,11 +245,32 @@ func (s *Store) Events(f Filter) []Event {
 	return s.filtered(f)
 }
 
+func providerMatches(filter, provider string) bool {
+	if filter == provider {
+		return true
+	}
+	family := func(value string) string {
+		switch value {
+		case "kimi", "kimi-ai", "kimi.ai", "kimi.com":
+			return "kimi"
+		case "grok", "x-ai", "x.ai":
+			return "xai"
+		case "anti-gravity":
+			return "antigravity"
+		case "gemini-cli", "gemini-interactions":
+			return "gemini"
+		default:
+			return value
+		}
+	}
+	return family(filter) == family(provider)
+}
+
 func (s *Store) filtered(f Filter) []Event {
 	out := make([]Event, 0)
 	for i := 0; i < len(s.events); i++ {
 		e := s.events[(s.next+i)%len(s.events)]
-		if !f.From.IsZero() && e.At.Before(f.From) || !f.To.IsZero() && !e.At.Before(f.To) || f.Provider != "" && e.Provider != f.Provider || f.Model != "" && e.Requested != f.Model {
+		if !f.From.IsZero() && e.At.Before(f.From) || !f.To.IsZero() && !e.At.Before(f.To) || f.Provider != "" && !providerMatches(f.Provider, e.Provider) || f.Model != "" && e.Requested != f.Model || f.Account != "" && e.Account != f.Account {
 			continue
 		}
 		out = append(out, e)

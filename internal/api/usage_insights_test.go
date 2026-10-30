@@ -25,7 +25,7 @@ func TestUsageInsightsManagementAndAssets(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	store.HandleUsage(context.Background(), coreusage.Record{RequestID: "request-one", Model: "routed", Alias: "favorite", ResponseModel: "served", Provider: "codex", Detail: coreusage.Detail{InputTokens: 100, OutputTokens: 20, CacheReadTokens: 80, TotalTokens: 120}})
+	store.HandleUsage(context.Background(), coreusage.Record{RequestID: "request-one", Model: "routed", Alias: "favorite", ResponseModel: "served", Provider: "codex", AuthIndex: "credential-1", Detail: coreusage.Detail{InputTokens: 100, OutputTokens: 20, CacheReadTokens: 80, TotalTokens: 120}})
 	h.SetUsageInsights(store)
 	s := &Server{cfg: cfg, engine: gin.New(), mgmt: h}
 	s.managementRoutesEnabled.Store(true)
@@ -40,6 +40,7 @@ func TestUsageInsightsManagementAndAssets(t *testing.T) {
 		{"/v8/management/observability/usage/insights", true, 200},
 		{"/v8/management/observability/usage/insights?from=invalid", true, 400},
 		{"/v8/management/observability/usage/insights?export=1&provider=claude", true, 200},
+		{"/v8/management/observability/usage/insights?account=missing", true, 200},
 		{"/usage-insights/", false, 200}, {"/usage-insights/app.js", false, 200}, {"/usage-insights/bridge.js", false, 200}, {"/usage-insights/store.go", false, 404},
 	} {
 		req := httptest.NewRequest(http.MethodGet, tc.path, nil)
@@ -61,7 +62,7 @@ func TestUsageInsightsManagementAndAssets(t *testing.T) {
 				t.Fatal("incorrect API output")
 			}
 		}
-		if strings.Contains(tc.path, "export=1") && res.Body.String() != "[]" {
+		if (strings.Contains(tc.path, "export=1") || strings.Contains(tc.path, "account=missing")) && !strings.Contains(res.Body.String(), `"total":0`) && res.Body.String() != "[]" {
 			t.Fatal("filtered export includes other provider")
 		}
 	}

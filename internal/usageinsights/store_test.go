@@ -24,6 +24,7 @@ func TestHistoryRoutingAccountingAndRestart(t *testing.T) {
 	s.HandleUsage(ctx, r)
 	r.RequestID = "execution-2"
 	r.Provider = "claude"
+	r.AuthIndex = "index-2"
 	r.Failed = true
 	r.Detail = coreusage.Detail{InputTokens: 20, OutputTokens: 10, CacheReadTokens: 5, CacheCreationTokens: 7, TotalTokens: 42}
 	s.HandleUsage(context.Background(), r)
@@ -43,6 +44,9 @@ func TestHistoryRoutingAccountingAndRestart(t *testing.T) {
 	if got := s.Snapshot(Filter{To: at}); got.Totals.Attempts != 0 {
 		t.Fatal("to must be exclusive")
 	}
+	if got := s.Snapshot(Filter{Account: "index-1"}); got.Totals.Attempts != 1 || got.Totals.Total != 140 {
+		t.Fatalf("account filter: %+v", got)
+	}
 	data, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
@@ -58,6 +62,15 @@ func TestHistoryRoutingAccountingAndRestart(t *testing.T) {
 	}
 	if got := reloaded.Snapshot(Filter{}); got.Totals != snap.Totals {
 		t.Fatalf("restart changed totals: %+v", got.Totals)
+	}
+	enabled = true
+	r.RequestID = "kimi-alias"
+	r.Provider = "kimi-ai"
+	r.AuthIndex = "kimi-index"
+	r.Failed = false
+	reloaded.HandleUsage(ctx, r)
+	if got := reloaded.Snapshot(Filter{Provider: "kimi"}); got.Totals.Attempts != 1 {
+		t.Fatalf("provider alias filter: %+v", got)
 	}
 }
 
