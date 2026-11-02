@@ -33,6 +33,8 @@
     event.preventDefault();
     event.stopPropagation();
     location.hash=usageRoute;
+    // The console's own links close the mobile sidebar; this injected link has no console handler, so tap its backdrop.
+    document.querySelector('.sidebar-backdrop.visible')?.click();
   }
   function mount() {
     const quotaLink=document.querySelector('a[href="#/quota"], a[href="#/quota/"]');
@@ -79,6 +81,7 @@
       section.setAttribute('aria-label','Model usage');
       frame=document.createElement('iframe');
       frame.title='Model usage';
+      frame.setAttribute('scrolling','no');
       frame.src='/usage-insights/?embedded=1';
       frame.style.cssText='display:block;width:100%;min-height:700px;height:100vh;border:0;background:transparent;';
       frame.addEventListener('load',()=>sendSession(true));

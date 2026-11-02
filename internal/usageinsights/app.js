@@ -185,6 +185,7 @@
   $('export').onclick=async()=>{if(!authorization)return;try{const p=params();p.set('export','1');const events=await request(p),url=URL.createObjectURL(new Blob([JSON.stringify(events,null,2)],{type:'application/json'})),a=node('a');a.href=url;a.download='usage-insights.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}catch(e){showError(e.message);}};
   window.addEventListener('message',e=>{if(e.origin!==location.origin||e.source!==sessionHost||e.data?.type!=='usage-insights-session')return;const nextAuthorization=e.data.authorization||'',changed=authorization!==nextAuthorization;authorization=nextAuthorization;for(const [k,v]of Object.entries(e.data.vars||{}))if(k.startsWith('--')&&typeof v==='string')document.documentElement.style.setProperty(k,v);if(e.data.theme){document.documentElement.style.colorScheme=e.data.theme;if(e.data.theme!==theme){theme=e.data.theme;if(data)render();}}if(authorization&&(changed||!data))load();});
   if(sessionHost)sessionHost.postMessage({type:'usage-insights-ready'},location.origin);
-  if(embedded)new ResizeObserver(()=>window.parent.postMessage({type:'usage-insights-height',height:document.body.scrollHeight},location.origin)).observe(document.body);
+  // Round up the fractional content height; a frame even a subpixel short becomes a scroller that traps touch swipes.
+  if(embedded)new ResizeObserver(()=>window.parent.postMessage({type:'usage-insights-height',height:Math.ceil(document.querySelector('main').getBoundingClientRect().bottom+scrollY)},location.origin)).observe(document.body);
   setInterval(()=>{if(!document.hidden)load();},15000);
 })();
