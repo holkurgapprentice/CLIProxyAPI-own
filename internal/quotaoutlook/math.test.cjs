@@ -130,3 +130,32 @@ test('monthly limits count only for subscriptions without a weekly one',()=>{
  const claude=[limit('c','claude','seven_day',168),limit('c','claude','five_hour',5)];
  assert.deepEqual(Q.accountLong([...kimi,...both,...claude]).map(s=>s.account+' '+s.limit),['k monthly','m weekly','c seven_day']);
 });
+test('recent burn uses only the selected span before the latest check',()=>{
+ const samples=[sample(-6,90),sample(-3,90),sample(-2,80),sample(-1,70),sample(0,60)];
+ close(Q.burn(samples,3),10);
+ close(Q.burn(samples,6),5);
+ assert.equal(Q.burn([sample(0,60)],3),null);
+ // One hour of history cannot stand for six.
+ assert.equal(Q.burn([sample(-1,70),sample(0,60)],6),null);
+});
+test('recent burn excludes refills',()=>{
+ const samples=[sample(-2,20,now-1.5*H,24),sample(-1,95,now+22.5*H,24),sample(0,90,now+22.5*H,24)];
+ close(Q.burn(samples,1),5);
+});
+test('weights scale pooled history, forecasts and drain',()=>{
+ const a=[sample(-1,80),sample(0,60)],b=[{...sample(-1,50),account:'b'},{...sample(0,50),account:'b'}];
+ const history=Q.sumHistory([a,b],now,now,H,[1,2.5]);
+ close(history[0].remaining,60+125);assert.deepEqual(history[0].parts,[60,50]);
+ const forecast=Q.sumForecast([[{at:now,remaining:60}],[{at:now,remaining:50}]],now,now,[1,2.5]);
+ close(forecast[0].remaining,185);
+ const drained=Q.drain([a,b],now,now,H,H,[2,1]);
+ close(drained[0].remaining,40);
+});
+test('finds refills in pooled lines and the first empty time',()=>{
+ const line=[{at:0,remaining:50},{at:1,remaining:40},{at:1,remaining:140},{at:2,remaining:139.8},{at:3,remaining:null},{at:4,remaining:200}];
+ assert.deepEqual(Q.refills(line),[{at:1,from:40,remaining:140,gain:100}]);
+ const points=[{at:10,remaining:5},{at:12,remaining:0},{at:15,remaining:0},{at:15,remaining:100}];
+ assert.equal(Q.emptyAt(points,10),12);
+ assert.equal(Q.emptyAt(points,13),15);
+ assert.equal(Q.emptyAt([{at:10,remaining:5}],10),null);
+});

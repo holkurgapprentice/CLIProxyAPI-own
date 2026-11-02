@@ -152,12 +152,14 @@ function valueAt(points,t,side=1) {
 }
 // Sum per-limit forecasts into one pooled line, keeping refills as vertical jumps.
 // Every point lists its per-limit values in parts, in the order of the input lists.
-function sumForecast(lists,start,end) {
+// Optional weights scale each limit's percentage into the pool, e.g. 2.5 for a subscription 2.5 times the base size.
+const weigh=(values,weights)=>values.reduce((s,v,k)=>s+v*(weights?.[k]??1),0);
+function sumForecast(lists,start,end,weights) {
  const times=[...new Set([start,end,...lists.flatMap(l=>l.map(p=>p.at))])].filter(t=>t>=start&&t<=end).sort((a,b)=>a-b);
  const points=[];
  for(const t of times) {
   const before=lists.map(l=>valueAt(l,t,-1)),after=lists.map(l=>valueAt(l,t,1));
-  const left=before.reduce((s,v)=>s+v,0),right=after.reduce((s,v)=>s+v,0);
+  const left=weigh(before,weights),right=weigh(after,weights);
   points.push({at:t,remaining:left,parts:before});
   if(Math.abs(right-left)>1e-9)points.push({at:t,remaining:right,parts:after});
  }
@@ -165,7 +167,7 @@ function sumForecast(lists,start,end) {
 }
 // Pooled remaining quota on a time grid. Values between checks are interpolated within a cycle;
 // a point is a gap until every selected limit has known history.
-function sumHistory(seriesList,start,end,step) {
+function sumHistory(seriesList,start,end,step,weights) {
  const all=seriesList.map(timeline),index=all.map(()=>0),points=[];
  for(let t=start;;t=Math.min(end,t+step)) {
   let total=0,known=all.length>0;
@@ -173,14 +175,14 @@ function sumHistory(seriesList,start,end,step) {
    while(index[k]+1<s.length&&s[index[k]+1].at<=t)index[k]++;
    const a=s[index[k]];if(!a||a.at>t){known=false;return null;}
    const b=s[index[k]+1],v=b&&sameCycle(a,b)?a.remaining+(b.remaining-a.remaining)*(t-a.at)/(b.at-a.at):a.remaining;
-   total+=v;return v;
+   total+=v*(weights?.[k]??1);return v;
   });
   points.push(known?{at:t,remaining:total,parts}:{at:t,remaining:null});
   if(t>=end)return points;
  }
 }
 // Pooled consumption in % points per hour, averaged over a trailing window. Resets are excluded.
-function drain(seriesList,start,end,step,window=HOUR) {
+function drain(seriesList,start,end,step,window=HOUR,weights) {
  const lists=seriesList.map(intervals),lo=lists.map(()=>0),points=[];
  for(let t=start;;t=Math.min(end,t+step)) {
   let total=0,measured=false;
@@ -192,13 +194,39 @@ function drain(seriesList,start,end,step,window=HOUR) {
     if(overlap>0){consumed+=list[i].drop*overlap/(list[i].to-list[i].from);observed+=overlap;}
    }
    if(!(observed>=window/4))return null;
-   const rate=consumed/(observed/HOUR);total+=rate;measured=true;return rate;
+   const rate=consumed/(observed/HOUR);total+=rate*(weights?.[k]??1);measured=true;return rate;
   });
   points.push(measured?{at:t,remaining:total,parts}:{at:t,remaining:null});
   if(t>=end)return points;
  }
 }
+// Recent burn in % per hour over the last hours before the limit's latest check. Refills are excluded.
+// Needs history for at least half of that span, otherwise null.
+function burn(samples,hours) {
+ const list=intervals(samples);
+ if(!list.length)return null;
+ const end=Math.max(...samples.map(s=>Date.parse(s.at))),start=end-hours*HOUR;
+ let consumed=0,observed=0;
+ for(const i of list) {
+  const overlap=Math.min(end,i.to)-Math.max(start,i.from);
+  if(overlap>0){consumed+=i.drop*overlap/(i.to-i.from);observed+=overlap;}
+ }
+ return observed>=hours*HOUR/2?consumed/(observed/HOUR):null;
+}
+// Upward jumps of a pooled line, i.e. refills at resets. Consumption never raises a pooled value.
+function refills(points,min=0.5) {
+ const out=[];
+ for(let i=1;i<points.length;i++) {
+  const a=points[i-1],b=points[i];
+  if(a.remaining!==null&&b.remaining!==null&&b.remaining-a.remaining>min)out.push({at:b.at,from:a.remaining,remaining:b.remaining,gain:b.remaining-a.remaining});
+ }
+ return out;
+}
+// First time a forecast is empty at or after from, or null.
+function emptyAt(points,from) {
+ return points.find(p=>p.at>=from&&p.remaining<=1e-9)?.at??null;
+}
 
-const api={key,timeline,outlook,forecast,capacity,sizes,poolForecast,accountWeekly,accountShort,accountMonthly,accountLong,valueAt,sumForecast,sumHistory,drain};
+const api={key,timeline,outlook,forecast,capacity,sizes,poolForecast,accountWeekly,accountShort,accountMonthly,accountLong,valueAt,sumForecast,sumHistory,drain,burn,refills,emptyAt};
 if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.QuotaMath=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

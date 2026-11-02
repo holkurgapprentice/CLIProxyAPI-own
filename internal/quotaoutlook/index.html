@@ -13,51 +13,67 @@ button,input,select{font:inherit;color:inherit}
 h1{font-size:28px;font-weight:700;letter-spacing:-.02em;margin:6px 0 0}
 .btn{height:36px;padding:0 14px;border-radius:10px;border:1px solid var(--border-color);background:var(--bg-primary);color:var(--text-primary);font-size:13px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:border-color .2s var(--ease-out-strong),background-color .2s var(--ease-out-strong)}
 .btn:hover{border-color:var(--border-hover);background:var(--bg-hover)}.btn:disabled{opacity:.6;cursor:progress}
-.btn:focus-visible,.icon-btn:focus-visible,.tab:focus-visible,.link-btn:focus-visible,select:focus-visible,svg:focus-visible{outline:2px solid var(--primary-color);outline-offset:2px}
+.btn:focus-visible,.icon-btn:focus-visible,.range-label:focus-visible,select:focus-visible,svg:focus-visible{outline:2px solid var(--primary-color);outline-offset:2px}
 #login{display:grid;gap:12px;max-width:520px;padding:20px;border:1px solid var(--border-color);border-radius:12px;background:var(--bg-primary)}#login label{display:grid;gap:6px;font-size:13px;color:var(--text-secondary)}
 #login input{height:40px;padding:0 12px;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-secondary)}#login small{color:var(--text-tertiary);font-size:12px}#login .btn{justify-self:start}
-/* Outlook panel. */
-.outlook{border-bottom:1px solid var(--border-color);padding-bottom:14px;animation:enter .5s var(--ease-out-strong) both}
-.summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0 4px}
-.headline{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 14px;min-width:0}
-.big{font-size:30px;font-weight:700;letter-spacing:-.02em;color:var(--accent);font-variant-numeric:tabular-nums;line-height:1.2;transition:color .3s var(--ease-out-strong)}
-.of{color:var(--text-tertiary);font-size:14px;margin-left:-8px}.pace{color:var(--text-secondary);font-size:13px}
-.alert{font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--failure-badge-bg);color:var(--failure-badge-text);border:1px solid var(--failure-badge-border)}
+/* Outlook toolbar. */
+.outlook{display:grid;gap:14px;padding-bottom:14px;animation:enter .5s var(--ease-out-strong) both}
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;font-size:12.5px;color:var(--text-secondary)}
+.seg{display:inline-flex;gap:2px;padding:2px;border-radius:9px;background:var(--bg-primary);border:1px solid var(--border-color)}
+.seg button{height:26px;padding:0 10px;border:0;border-radius:7px;background:transparent;color:var(--text-secondary);font-size:12.5px;font-weight:500;cursor:pointer;transition:background-color .2s var(--ease-out-strong),color .2s var(--ease-out-strong)}
+.seg button:hover{color:var(--text-primary)}.seg button[aria-pressed=true],.seg button[aria-selected=true]{background:var(--bg-tertiary);color:var(--text-primary);box-shadow:0 1px 2px #0000001a}
+.seg button:focus-visible{outline:2px solid var(--primary-color);outline-offset:1px}
+.group{display:inline-flex;align-items:center;gap:8px}.group>span{color:var(--text-tertiary)}
+.toolbar .btn{height:30px;font-size:12.5px;padding:0 12px}.toolbar .btn[aria-expanded=true]{background:var(--bg-tertiary);border-color:var(--border-hover)}
+.nav{margin-left:auto;display:inline-flex;align-items:center;gap:2px;font-variant-numeric:tabular-nums}
+.nav .icon-btn{width:28px;height:28px}.nav .icon-btn:disabled{opacity:.35;cursor:default;background:transparent}
+.range-label{border:0;background:transparent;color:var(--text-tertiary);font-size:12.5px;padding:4px 6px;border-radius:6px;cursor:default}
+.range-label.moved{cursor:pointer;color:var(--text-secondary)}.range-label.moved:hover{color:var(--text-primary);background:var(--bg-tertiary)}
 .icon-btn{width:32px;height:32px;flex:none;border:0;border-radius:8px;background:transparent;color:var(--text-secondary);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:background-color .2s var(--ease-out-strong),color .2s var(--ease-out-strong)}
-.icon-btn:hover{background:var(--bg-tertiary);color:var(--text-primary)}.icon-btn svg{transition:transform .35s var(--ease-out-strong)}.icon-btn[aria-expanded=false] svg{transform:rotate(180deg)}
+.icon-btn:hover{background:var(--bg-tertiary);color:var(--text-primary)}
 .collapse{display:grid;grid-template-rows:1fr;transition:grid-template-rows .4s var(--ease-out-strong),opacity .3s var(--ease-out-strong)}.collapse>div{min-height:0;overflow:hidden}
 .collapse.closed{grid-template-rows:0fr;opacity:0}
-.tabs{position:relative;display:flex;gap:2px;border-bottom:1px solid var(--border-color);margin-top:8px}
-.tab{position:relative;border:0;background:transparent;color:var(--text-secondary);font-size:13px;padding:8px 2px 10px;margin-right:18px;cursor:pointer;transition:color .2s var(--ease-out-strong)}
-.tab:hover{color:var(--text-primary)}.tab[aria-selected=true]{color:var(--accent)}
-.indicator{position:absolute;bottom:-1px;left:0;height:2px;width:0;border-radius:2px;background:var(--accent);transition:transform .35s var(--ease-out-strong),width .35s var(--ease-out-strong),background-color .3s}
-.chart-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 0 4px;min-height:30px}
-.key{display:flex;align-items:center;gap:16px;font-size:12px;color:var(--text-secondary)}.key span{display:inline-flex;align-items:center;gap:7px}
-.swatch{width:7px;height:7px;border-radius:50%;background:var(--accent)}.dash{width:14px;border-top:2px dashed var(--accent)}.key .note{color:var(--text-tertiary)}
-.range{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-tertiary)}
-select{height:30px;padding:0 30px 0 10px;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-primary) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 4.5 3 3 3-3'/%3E%3C/svg%3E") no-repeat right 10px center;appearance:none;color:var(--text-primary);font-size:12px;font-weight:500;cursor:pointer;transition:border-color .2s var(--ease-out-strong)}
+select{height:30px;padding:0 30px 0 10px;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-primary) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 4.5 3 3 3-3'/%3E%3C/svg%3E") no-repeat right 10px center;appearance:none;color:var(--text-primary);font-size:12.5px;font-weight:500;cursor:pointer;transition:border-color .2s var(--ease-out-strong)}
 select:hover{border-color:var(--border-hover)}select option{background:var(--bg-primary);color:var(--text-primary)}
-#plot{position:relative}#chart{display:block;width:100%;height:240px;overflow:visible;touch-action:pan-y}
-#chart .grid{stroke:var(--border-color);stroke-width:1}#chart .base{stroke:var(--border-primary)}
-#chart text{fill:var(--text-tertiary);font:11px var(--font);font-variant-numeric:tabular-nums}
-#chart .line{fill:none;stroke:var(--accent);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}#chart .projected{stroke-dasharray:5 5;opacity:.9}
-#chart .stop{stop-color:var(--accent)}#chart .now{stroke:var(--text-tertiary);stroke-dasharray:2 4}#chart .now-label{fill:var(--text-secondary)}
-#chart .cross{stroke:var(--text-tertiary);stroke-width:1;opacity:0;transition:opacity .15s}#chart .focus{fill:var(--accent);stroke:var(--bg-secondary);stroke-width:2;opacity:0;transition:opacity .15s}
-#chart.hovering .cross,#chart.hovering .focus{opacity:1}
-.tooltip{position:absolute;top:0;left:0;pointer-events:none;padding:7px 10px;border-radius:8px;background:var(--floating-surface);border:1px solid var(--border-color);box-shadow:var(--floating-shadow);font-size:12px;white-space:nowrap;opacity:0;transform:translate(-50%,calc(-100% - 6px)) scale(.97);transition:opacity .15s var(--ease-out-strong),transform .15s var(--ease-out-strong)}
-.tooltip.visible{opacity:1;transform:translate(-50%,calc(-100% - 12px))}.tooltip b{display:block;font-size:13px;font-variant-numeric:tabular-nums}.tooltip span{color:var(--text-tertiary)}
-.tooltip.below{transform:translate(-50%,6px) scale(.97)}.tooltip.below.visible{transform:translate(-50%,12px)}
-.tooltip ul{list-style:none;margin:6px 0 0;padding:6px 0 0;border-top:1px solid var(--border-color);display:grid;gap:3px}.tooltip li{display:flex;align-items:center;gap:6px}
-.tooltip li i{width:7px;height:7px;border-radius:50%;flex:none}.tooltip li span{color:var(--text-secondary);flex:1}.tooltip li em{font-style:normal;font-weight:600;font-variant-numeric:tabular-nums;margin-left:12px}
-.empty{position:absolute;inset:0 0 28px 44px;display:grid;place-items:center;color:var(--text-tertiary);font-size:13px;text-align:center;padding:0 16px}
-.chart-foot{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px 16px;font-size:12px;margin-top:4px}
-.chart-foot .lead{color:var(--text-primary);font-weight:500;margin-right:14px}.chart-foot .muted{color:var(--text-tertiary)}
-.link-btn{border:0;background:transparent;padding:4px 2px;color:var(--text-tertiary);font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;border-radius:6px}.link-btn:hover{color:var(--text-primary)}
-.link-btn svg{transition:transform .3s var(--ease-out-strong)}.link-btn[aria-expanded=true] svg{transform:rotate(90deg)}
-.fade{animation:fade .45s var(--ease-out-strong) both}
-.settings-inner{padding-top:14px;display:grid;gap:14px}
+/* Accounts panel. */
+.panel{display:grid;gap:14px;padding:16px;border:1px solid var(--border-color);border-radius:12px;background:var(--bg-primary)}
+.checks{display:flex;flex-wrap:wrap;gap:6px}.checks:empty{display:none}
+.check{display:inline-flex;align-items:center;gap:7px;padding:4px 10px 4px 8px;border:1px solid var(--border-color);border-radius:999px;font-size:12px;color:var(--text-secondary);cursor:pointer;transition:border-color .2s,opacity .2s}
+.check:hover{border-color:var(--border-hover)}.check input{margin:0;accent-color:var(--text-secondary)}.check i{width:7px;height:7px;border-radius:50%}.check:has(input:not(:checked)){opacity:.55}
 .controls{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;font-size:12px;color:var(--text-secondary)}.controls label{display:inline-flex;align-items:center;gap:8px}
-.controls input[type=checkbox]{accent-color:var(--accent);margin:0}.controls .btn{height:30px;font-size:12px;margin-left:auto}
+.controls input[type=checkbox]{margin:0}.controls .btn{height:30px;font-size:12px;margin-left:auto}
+/* Provider cards. */
+#cards{display:grid;gap:14px}
+.card{--accent:var(--text-primary);padding:16px 18px 12px;border:1px solid var(--border-color);border-radius:14px;background:var(--bg-primary);animation:enter .45s var(--ease-out-strong) both}
+.card-head{display:flex;align-items:center;gap:8px;font-size:13px}.card-head b{font-weight:600}.card-head .muted{font-size:12px}
+.icon{width:18px;height:18px;border-radius:5px;display:inline-grid;place-items:center;flex:none;overflow:hidden}.icon img{width:14px;height:14px;object-fit:contain}.icon b{font-size:10px;color:#fff}
+.card-sum{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px 28px;margin:6px 0 4px}
+.headline{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 12px;min-width:0}
+.big{font-size:34px;font-weight:700;letter-spacing:-.02em;color:var(--text-primary);font-variant-numeric:tabular-nums;line-height:1.15}
+.of{color:var(--text-tertiary);font-size:13.5px}.sizes{color:var(--text-tertiary);font-size:12px}
+.alert{font-size:11.5px;font-weight:600;padding:1px 9px;border-radius:999px;background:var(--failure-badge-bg);color:var(--failure-badge-text);border:1px solid var(--failure-badge-border)}
+.stats{display:flex;flex-wrap:wrap;gap:6px 28px;margin:0}.stats div{display:grid;gap:1px}
+.stats dt{font-size:11.5px;color:var(--text-tertiary)}.stats dd{margin:0;font-size:13px;font-weight:500;color:var(--text-primary);font-variant-numeric:tabular-nums;white-space:nowrap}
+.stats dd small{color:var(--text-secondary);font-weight:400;font-size:12.5px}
+.plot{position:relative;margin-top:6px}
+.chart{display:block;width:100%;height:260px;overflow:visible;touch-action:pan-y}
+.chart .grid{stroke:var(--border-color);stroke-width:1}.chart .base{stroke:var(--border-primary)}
+.chart text{fill:var(--text-tertiary);font:11px var(--font);font-variant-numeric:tabular-nums}
+.chart .line{fill:none;stroke:var(--accent);stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round}.chart .projected{stroke-dasharray:5 4;opacity:.9}
+.chart .stop{stop-color:var(--accent)}.chart .now{stroke:var(--text-tertiary);stroke-width:1}.chart .now-label{fill:var(--text-secondary);font-size:10.5px}
+.chart .now-dot{fill:var(--accent);stroke:var(--bg-primary);stroke-width:2}
+.chart .refill{fill:var(--text-secondary);font-size:10.5px;font-weight:500}
+.chart .cross{stroke:var(--text-tertiary);stroke-width:1;opacity:0;transition:opacity .15s}.chart .focus{fill:var(--accent);stroke:var(--bg-primary);stroke-width:2;opacity:0;transition:opacity .15s}
+.chart.hovering .cross,.chart.hovering .focus{opacity:1}
+.pill{position:absolute;top:0;right:12px;z-index:2;pointer-events:none;padding:4px 9px;border-radius:7px;background:var(--floating-surface);border:1px solid var(--border-color);box-shadow:var(--floating-shadow);font-size:11.5px;color:var(--text-secondary);white-space:nowrap;font-variant-numeric:tabular-nums;opacity:0;transform:translateY(-3px);transition:opacity .15s var(--ease-out-strong),transform .15s var(--ease-out-strong)}
+.pill.left{right:auto;left:52px}.pill.visible{opacity:1;transform:none}.pill b{color:var(--text-primary);font-weight:600}
+.pill ul{list-style:none;margin:5px 0 1px;padding:5px 0 0;border-top:1px solid var(--border-color);display:grid;gap:2px}.pill li{display:flex;align-items:center;gap:6px}
+.pill li i{width:6px;height:6px;border-radius:50%;flex:none;background:var(--accent)}.pill li span{flex:1}.pill li em{font-style:normal;font-weight:600;color:var(--text-primary);margin-left:12px}
+.empty{position:absolute;inset:0 0 28px 46px;display:grid;place-items:center;color:var(--text-tertiary);font-size:13px;text-align:center;padding:0 16px}
+.legend{display:flex;align-items:center;flex-wrap:wrap;gap:6px 18px;font-size:12px;color:var(--text-secondary);margin-top:2px}.legend span{display:inline-flex;align-items:center;gap:7px}
+.legend .muted{color:var(--text-tertiary)}.legend i{width:16px;border-top:2px solid var(--accent)}.legend i.dash{border-top-style:dashed}.legend .note{margin-left:auto;color:var(--text-tertiary)}
+.fade{animation:fade .45s var(--ease-out-strong) both}
+#cardsEmpty{margin:8px 0;font-size:13px}
 #status{font-size:12px;color:var(--text-tertiary);min-height:18px}
 .errors{white-space:pre-line;color:var(--error-color);background:var(--bg-error-light);border:1px solid var(--warning-border);border-radius:10px;padding:9px 12px;font-size:12.5px;line-height:1.5}.errors:empty{display:none}
 .table-wrap{overflow-x:auto;border:1px solid var(--border-color);border-radius:10px}
@@ -72,39 +88,33 @@ td.num small{color:var(--text-tertiary);font-size:11px}
 .footnote{font-size:11.5px;line-height:1.6;color:var(--text-tertiary);margin:0}
 @keyframes enter{from{opacity:0;transform:translateY(6px)}}@keyframes fade{from{opacity:0}}
 .embedded body{overflow:hidden}.embedded main{max-width:none;margin:0;padding:0 2px}.embedded,.embedded body{background:transparent}
-@media(max-width:600px){main{padding:0 14px;margin:16px auto}.big{font-size:24px}.chart-head{flex-wrap:wrap}.controls .btn{margin-left:0}}
+@media(max-width:700px){main{padding:0 14px;margin:16px auto}.big{font-size:26px}.nav{margin-left:0}.controls .btn{margin-left:0}.card{padding:14px 12px 10px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style></head><body><main>
 <header class="page-head" id="pageHead"><div><a href="/management.html#/quota">← Quota management</a><h1>Quota outlook</h1></div><button id="logout" class="btn hidden">Disconnect</button></header>
 <form id="login"><label>Management key <input id="key" type="password" autocomplete="off" required placeholder="Kept in memory for this tab only"></label><button class="btn">Connect</button><small>The same key as the management console. Never saved in browser storage or quota history.</small></form>
 <section id="dashboard" class="outlook hidden" aria-label="Quota outlook">
- <div class="summary">
-  <div class="headline" aria-live="polite"><span class="big" id="total">—</span><span class="of" id="capacity">Waiting for quota history</span><span class="pace" id="pace"></span><span class="alert hidden" id="risk"></span></div>
-  <button class="icon-btn" id="collapse" aria-expanded="true" aria-controls="body" title="Collapse"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 10 4-4 4 4"/></svg></button>
+ <div class="toolbar">
+  <div class="seg" role="tablist" aria-label="Chart"><button role="tab" id="remainingTab" aria-selected="true">Remaining</button><button role="tab" id="drainTab" aria-selected="false" tabindex="-1">Drain rate</button><button role="tab" id="tokensTab" aria-selected="false" tabindex="-1">Tokens</button></div>
+  <div class="group" id="burnGroup"><span>Burn rate</span><div class="seg" id="burn" role="group" aria-label="Burn rate measured over"><button type="button" data-hours="1" aria-pressed="false">1h</button><button type="button" data-hours="3" aria-pressed="true">3h</button><button type="button" data-hours="6" aria-pressed="false">6h</button></div></div>
+  <label class="group" id="futureGroup"><span>Future usage</span><select id="future"><option value="same" selected>Same as now</option><option value="average">7-day average</option><option value="half">Half as much</option><option value="double">Twice as much</option><option value="none">None</option></select></label>
+  <label class="group" id="providerControl"><span>Provider</span><select id="provider"><option value="all">All providers</option></select></label>
+  <button class="btn" id="accountsToggle" type="button" aria-expanded="false" aria-controls="accountsPanel">Accounts</button>
+  <div class="nav"><button class="range-label" id="rangeLabel" type="button"></button><button class="icon-btn" id="prev" type="button" aria-label="Earlier"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10 4-4 4 4 4"/></svg></button><button class="icon-btn" id="next" type="button" aria-label="Later"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 4 4 4-4 4"/></svg></button></div>
  </div>
- <div class="collapse" id="body"><div>
-  <div class="tabs" role="tablist" aria-label="Chart"><button class="tab" role="tab" id="remainingTab" aria-selected="true" aria-controls="plot">Remaining quota</button><button class="tab" role="tab" id="drainTab" aria-selected="false" aria-controls="plot" tabindex="-1">Drain rate</button><button class="tab" role="tab" id="tokensTab" aria-selected="false" aria-controls="plot" tabindex="-1">Token usage</button><span class="indicator" id="indicator"></span></div>
-  <div class="chart-head">
-   <div class="key" id="legend"></div>
-   <label class="range" id="horizonRange">Range <select id="horizon"><option value="1">±1 day</option><option value="3">±3 days</option><option value="7" selected>±7 days</option><option value="14">±14 days</option></select></label>
-   <label class="range hidden" id="spanRange">Show <select id="span"><option value="6">Last 6 hours</option><option value="24" selected>Last 24 hours</option><option value="72">Last 3 days</option><option value="168">Last 7 days</option></select></label>
+ <div class="collapse closed" id="accountsPanel"><div><div class="panel">
+  <div class="checks" id="accountList" role="group" aria-label="Accounts counted in the pools"></div>
+  <div class="controls">
+   <label>Limits <select id="limit"><option value="weekly" selected>Weekly or monthly limits</option><option value="short">5-hour windows</option></select></label>
+   <label><input type="checkbox" id="labels">Show account labels</label>
+   <button class="btn" id="refresh" type="button">Check quotas now</button>
   </div>
-  <div id="plot" role="tabpanel"><svg id="chart" tabindex="0" role="img" aria-label="Pooled quota chart"></svg><div class="tooltip" id="tooltip" aria-hidden="true"></div><div class="empty hidden" id="empty"></div></div>
-  <div class="chart-foot"><div id="foot"></div><button class="link-btn" id="settingsToggle" aria-expanded="false" aria-controls="settings"><svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" aria-hidden="true"><path d="M3 1.5 7 5 3 8.5z"/></svg>Forecast settings</button></div>
-  <div class="collapse closed" id="settings"><div><div class="settings-inner">
-   <div class="controls">
-    <label id="providerControl">Provider <select id="provider"><option value="all">All providers</option></select></label>
-    <label>Subscription <select id="account"><option value="all">All subscriptions</option></select></label>
-    <label>Limits <select id="limit"><option value="weekly" selected>Weekly or monthly limits</option><option value="short">5-hour windows</option></select></label>
-    <label>Pace averaged over <select id="lookback"><option value="24">Last 24 hours</option><option value="72">Last 3 days</option><option value="168" selected>Last 7 days</option></select></label>
-    <label><input type="checkbox" id="labels">Show account labels</label>
-    <button class="btn" id="refresh" type="button">Check quotas now</button>
-   </div>
-   <div id="status" role="status" aria-live="polite"></div>
-   <div class="errors" id="errors" role="alert"></div>
-   <div class="table-wrap"><table><thead><tr><th>Subscription</th><th class="num">Remaining</th><th class="num">Size</th><th class="num">Pace / day</th><th class="num">At reset</th><th>Resets</th><th>Status</th></tr></thead><tbody id="rows"></tbody></table></div>
-   <p class="footnote">The server checks every enabled subscription once an hour while it runs, and also records quota refreshes made in the console. History stays on this server for 14 days. Each limit is assumed full at the start of its reset cycle, and values between checks are interpolated. Totals add each selected limit's remaining percentage. The forecast continues each limit at its average daily pace (averaged over at least a full day, so a busy session is not projected around the clock) and refills it to 100% at its own reset. When a subscription runs out, its work moves to the provider's other subscriptions in proportion to their size. Size is measured from tokens the proxy routed per percent of quota used; until a subscription has used at least 5%, it is estimated from its plan (for example Max 20x = 20 × Pro, Codex Pro ≈ 6 × Plus). Use outside the proxy makes a subscription look smaller than it is.</p>
-  </div></div></div>
- </div></div>
+  <div id="status" role="status" aria-live="polite"></div>
+  <div class="errors" id="errors" role="alert"></div>
+  <div class="table-wrap"><table><thead><tr><th>Subscription</th><th class="num">Remaining</th><th class="num">Size</th><th class="num">Burn / h</th><th class="num">Forecast / h</th><th class="num">At reset</th><th>Resets</th><th>Status</th></tr></thead><tbody id="rows"></tbody></table></div>
+  <p class="footnote">The server checks every enabled subscription once an hour while it runs, and also records quota refreshes made in the console. History stays on this server for 14 days. Each limit is assumed full at the start of its reset cycle, and values between checks are interpolated. A provider's pool adds each subscription's remaining percentage scaled by its size, so a subscription 2.5 times the base size counts as 250%. Burn rate is the consumption over the selected hours before each subscription's latest check. Future usage continues each limit at that burn, scaled as chosen (the 7-day average is spread over at least a full day so a busy session is not projected around the clock), and refills it at its own reset. Without a measured burn the 7-day average is used. When a subscription runs out, its work moves to the provider's other subscriptions in proportion to their size. Size is measured from tokens the proxy routed per percent of quota used; until a subscription has used at least 5%, it is estimated from its plan (for example Max 20x = 20 × Pro, Codex Pro ≈ 6 × Plus). Use outside the proxy makes a subscription look smaller than it is.</p>
+ </div></div></div>
+ <div id="cards"></div>
+ <p class="muted hidden" id="cardsEmpty"></p>
 </section>
-</main><script src="/quota-outlook/math.js"></script><script src="/quota-outlook/app.js"></script></body></html>
+</main><script src="/usage-insights/icons.js"></script><script src="/quota-outlook/math.js"></script><script src="/quota-outlook/app.js"></script></body></html>

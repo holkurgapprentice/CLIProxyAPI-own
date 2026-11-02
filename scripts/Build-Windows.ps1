@@ -12,7 +12,7 @@ $temporaryOutput = $OutputPath + '.build-' + [Guid]::NewGuid().ToString('N') + '
 $oldOS = $env:GOOS; $oldArch = $env:GOARCH; $oldCGO = $env:CGO_ENABLED
 try {
     if (-not $SkipTests) {
-        & node --test internal/quotaoutlook/math.test.cjs
+        & node --test internal/quotaoutlook/math.test.cjs internal/quotaoutlook/management.test.cjs
         if ($LASTEXITCODE -ne 0) { throw 'Quota forecast tests failed.' }
         & $Go test ./...
         if ($LASTEXITCODE -ne 0) { throw 'Tests failed; no release built.' }

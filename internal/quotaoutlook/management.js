@@ -1,6 +1,22 @@
 /* Integrate fork-owned outlook into the downloaded console's quota page. */
 (() => {
   'use strict';
+  // Locate consumption on the full quota window before clipping it to the viewport.
+  function windowGeometry(from, to, start, end, remaining) {
+    const visibleFrom = Math.max(from, start), visibleTo = Math.min(to, end);
+    if (!(to > from && end > start && visibleTo > visibleFrom)) return null;
+    const usedUntil = from + (to - from) * (100 - remaining) / 100;
+    return {
+      left: (visibleFrom - start) / (end - start) * 100,
+      width: (visibleTo - visibleFrom) / (end - start) * 100,
+      fill: remaining === null ? null : Math.max(0, Math.min(100, (usedUntil - visibleFrom) / (visibleTo - visibleFrom) * 100)),
+      continuesBefore: from < start, continuesAfter: to > end
+    };
+  }
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {windowGeometry};
+    return;
+  }
   let authorization = '', frame = null, section = null, routeSince = 0, lastState = '', scheduled = false, retry = 0;
   let notes = new Map(), notesWanted = true, notesLoading = false;
   let fileIndex = new Map(), months = new Map(), monthsAt = 0, monthsLoading = false;
@@ -50,6 +66,8 @@
     style.textContent = '.qo-split>[class*="QuotaTimeline-module__windowLabel"]{display:none}' +
       '.qo-used,.qo-left{position:relative;font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis}' +
       '.qo-used{font-weight:600}.qo-left{margin-left:auto;padding-left:8px}' +
+      '.qo-bar[data-continues-before="true"]{border-top-left-radius:0;border-bottom-left-radius:0;border-left:0}' +
+      '.qo-bar[data-continues-after="true"]{border-top-right-radius:0;border-bottom-right-radius:0;border-right:0}' +
       '.qo-named>[class*="QuotaCard-module__fileName"]:not(.qo-note),.qo-named>[class*="QuotaTimeline-module__laneName"]:not(.qo-note){display:none}' +
       '.qo-month>[class*="QuotaTimeline-module__window___"]:not(.qo-bar),.qo-month>[class*="QuotaTimeline-module__laneIdle"],' +
       '.qo-month-top>[class*="QuotaTimeline-module__lanePeriod"]:not(.qo-period){display:none}';
@@ -142,18 +160,18 @@
     }
   }
   function drawMonths(lane, track, top, month, start, end) {
-    const now = Date.now(), percent = ms => (ms - start) / (end - start) * 100;
+    const now = Date.now();
     const shift = (ms, n) => { const d = new Date(ms); d.setUTCMonth(d.getUTCMonth() + n); return d.getTime(); };
     const bars = [];
     let n = 0;
     while (shift(month.reset, n - 1) > start && n > -24) n--;
     for (; shift(month.reset, n - 1) < end && n < 24; n++) {
       const from = shift(month.reset, n - 1), to = shift(month.reset, n);
-      const left = Math.max(0, percent(from)), right = Math.min(100, percent(to));
-      if (right <= left) continue;
       const state = to <= now ? 'Past' : from <= now ? 'Live' : 'Next';
       // Usage belongs to the reported month only, as in the console's own bars.
-      bars.push({from, to, left, width: right - left, state, remaining: state === 'Live' && n === 0 ? month.remaining : null});
+      const remaining = state === 'Live' && n === 0 ? month.remaining : null;
+      const geometry = windowGeometry(from, to, start, end, remaining);
+      if (geometry) bars.push({from, to, ...geometry, state, remaining});
     }
     if (!track.classList.contains('qo-month')) track.classList.add('qo-month');
     if (!top.classList.contains('qo-month-top')) top.classList.add('qo-month-top');
@@ -173,11 +191,13 @@
       node.className = moduleClass('window') + ' ' + moduleClass('window' + bar.state) + ' qo-bar';
       node.style.left = bar.left + '%';
       node.style.width = bar.width + '%';
+      node.dataset.continuesBefore = String(bar.continuesBefore);
+      node.dataset.continuesAfter = String(bar.continuesAfter);
       node.title = laneFile(lane) + '\n' + stamp(bar.from) + ' → ' + stamp(bar.to) + (bar.remaining !== null ? '\n' + bar.remaining + '% remaining' : '');
       if (bar.remaining !== null) {
         const fill = document.createElement('span');
         fill.className = moduleClass('windowFill');
-        fill.style.width = (100 - bar.remaining) + '%';
+        fill.style.width = bar.fill + '%';
         node.append(fill);
       }
       if (bar.width > 9) {
